@@ -11,3 +11,4 @@ models/
 
 .DS_Store
 .env
+database/*.db

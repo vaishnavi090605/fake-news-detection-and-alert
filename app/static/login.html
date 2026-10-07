@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fake News Detection — Sign In</title>
+<link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand" style="padding:0 0 18px 0;">
+      <span class="dot"></span>
+      <span>TruthGuard AI</span>
+    </div>
+
+    <div class="auth-tabs">
+      <button id="tabLogin" class="active" onclick="switchTab('login')">Login</button>
+      <button id="tabRegister" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm" onsubmit="return handleLogin(event)">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="loginUsername" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password" />
+      </div>
+      <button class="btn" style="width:100%;" type="submit">Sign In</button>
+      <div class="error-msg" id="loginError"></div>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="registerForm" style="display:none;" onsubmit="return handleRegister(event)">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="regUsername" required minlength="3" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="regEmail" required />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="regPassword" required minlength="6" />
+      </div>
+      <div class="field">
+        <label>Admin Code <span class="hint" style="display:inline;">(optional — leave blank for a normal account)</span></label>
+        <input type="text" id="regAdminCode" placeholder="Only if you're registering as admin" />
+      </div>
+      <button class="btn" style="width:100%;" type="submit">Create Account</button>
+      <div class="error-msg" id="registerError"></div>
+    </form>
+  </div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script>
+  // Already logged in? Skip straight to the right dashboard.
+  if (API.getToken()) {
+    window.location.href = API.getRole() === "admin" ? "/static/admin.html" : "/static/dashboard.html";
+  }
+
+  function switchTab(which) {
+    document.getElementById("tabLogin").classList.toggle("active", which === "login");
+    document.getElementById("tabRegister").classList.toggle("active", which === "register");
+    document.getElementById("loginForm").style.display = which === "login" ? "block" : "none";
+    document.getElementById("registerForm").style.display = which === "register" ? "block" : "none";
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const errEl = document.getElementById("loginError");
+    errEl.textContent = "";
+    const username = document.getElementById("loginUsername").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    try {
+      const data = await API.login(username, password);
+      API.setSession(data.access_token, data.role, username);
+      window.location.href = data.role === "admin" ? "/static/admin.html" : "/static/dashboard.html";
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+    return false;
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    const errEl = document.getElementById("registerError");
+    errEl.textContent = "";
+    const username = document.getElementById("regUsername").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value;
+    const adminCode = document.getElementById("regAdminCode").value.trim();
+    try {
+      const data = await API.register(username, email, password, adminCode || null);
+      API.setSession(data.access_token, data.role, username);
+      window.location.href = data.role === "admin" ? "/static/admin.html" : "/static/dashboard.html";
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+    return false;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin Dashboard — TruthGuard AI</title>
+<link rel="stylesheet" href="/static/css/style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand"><span class="dot"></span><span>TruthGuard AI</span></div>
+    <nav class="nav">
+      <a href="/static/admin.html" class="active">📊 Dashboard</a>
+      <a href="#alertsSection" onclick="document.getElementById('alertsSection').scrollIntoView({behavior:'smooth'});">🚨 Alerts</a>
+      <a href="#reportsSection" onclick="document.getElementById('reportsSection').scrollIntoView({behavior:'smooth'});">🚩 Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <span id="whoami">—</span>
+      <button onclick="API.logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h1>Admin Dashboard</h1>
+      <span class="role-badge">admin</span>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="grid grid-4" id="statCards">
+      <div class="card stat-card"><div class="label">Total Checked</div><div class="value">—</div></div>
+      <div class="card stat-card"><div class="label">Fake Detected</div><div class="value">—</div></div>
+      <div class="card stat-card"><div class="label">Genuine</div><div class="value">—</div></div>
+      <div class="card stat-card"><div class="label">Repeated Fake</div><div class="value">—</div></div>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:16px;">
+      <div class="card">
+        <h2>Category Breakdown</h2>
+        <canvas id="categoryChart" height="140"></canvas>
+      </div>
+      <div class="card stat-card">
+        <div class="label">Alerts Generated</div>
+        <div class="value" id="alertsCount" style="color:var(--red);">—</div>
+        <div class="sub">Stories flagged for repeated circulation</div>
+      </div>
+    </div>
+
+    <!-- Alerts table -->
+    <div class="card" id="alertsSection" style="margin-top:16px;">
+      <h2>🚨 Repeated Fake News Alerts</h2>
+      <div id="alertsWrap"><div class="empty-state">Loading...</div></div>
+    </div>
+
+    <!-- Reports table -->
+    <div class="card" id="reportsSection" style="margin-top:16px;">
+      <h2>🚩 User-Submitted Reports</h2>
+      <div id="reportsWrap"><div class="empty-state">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script>
+  API.requireAuth();
+  if (API.getRole() !== "admin") {
+    alert("Admin access required.");
+    window.location.href = "/static/dashboard.html";
+  }
+  document.getElementById("whoami").textContent = API.getUsername() || "admin";
+
+  let chart = null;
+
+  async function loadStats() {
+    try {
+      const stats = await API.adminStats();
+      const cards = document.querySelectorAll("#statCards .stat-card .value");
+      cards[0].textContent = stats.total_checked;
+      cards[1].textContent = stats.fake_count;
+      cards[2].textContent = stats.genuine_count;
+      cards[3].textContent = stats.repeated_count;
+      document.getElementById("alertsCount").textContent = stats.alerts_count;
+
+      const labels = Object.keys(stats.category_breakdown);
+      const values = Object.values(stats.category_breakdown);
+      const ctx = document.getElementById("categoryChart").getContext("2d");
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels.length ? labels : ["No data yet"],
+          datasets: [{
+            data: values.length ? values : [0],
+            backgroundColor: "#5b8def",
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: "#9797a3" }, grid: { display: false } },
+            y: { ticks: { color: "#9797a3" }, grid: { color: "#26262f" }, beginAtZero: true },
+          },
+        },
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function loadAlerts() {
+    const wrap = document.getElementById("alertsWrap");
+    try {
+      const alerts = await API.adminAlerts();
+      if (!alerts.length) {
+        wrap.innerHTML = `<div class="empty-state">No alerts yet.</div>`;
+        return;
+      }
+      wrap.innerHTML = `
+        <table>
+          <thead><tr><th>Fake News ID</th><th>Message</th><th>Severity</th><th>Status</th><th>Created</th></tr></thead>
+          <tbody>
+            ${alerts.map(a => `
+              <tr>
+                <td>#${a.fake_news_id}</td>
+                <td class="truncate">${escapeHtml(a.message)}</td>
+                <td><span class="badge ${a.severity}">${a.severity}</span></td>
+                <td><span class="badge status-${a.status}">${a.status}</span></td>
+                <td>${new Date(a.created_at.replace(' ', 'T') + 'Z').toLocaleString()}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`;
+    } catch (err) {
+      wrap.innerHTML = `<div class="empty-state">Could not load alerts: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  async function loadReports() {
+    const wrap = document.getElementById("reportsWrap");
+    try {
+      const reports = await API.adminReports();
+      if (!reports.length) {
+        wrap.innerHTML = `<div class="empty-state">No reports yet.</div>`;
+        return;
+      }
+      wrap.innerHTML = `
+        <table>
+          <thead><tr><th>Text</th><th>Reason</th><th>Status</th><th>Reported</th><th>Action</th></tr></thead>
+          <tbody>
+            ${reports.map(r => `
+              <tr>
+                <td class="truncate">${escapeHtml(r.reported_text)}</td>
+                <td>${escapeHtml(r.reason || '—')}</td>
+                <td><span class="badge status-${r.status}">${r.status}</span></td>
+                <td>${new Date(r.created_at.replace(' ', 'T') + 'Z').toLocaleString()}</td>
+                <td>
+                  <button class="btn secondary" style="padding:5px 10px; font-size:11.5px;" onclick="setReportStatus(${r.id}, 'reviewed')">Mark Reviewed</button>
+                  <button class="btn secondary" style="padding:5px 10px; font-size:11.5px;" onclick="setReportStatus(${r.id}, 'dismissed')">Dismiss</button>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`;
+    } catch (err) {
+      wrap.innerHTML = `<div class="empty-state">Could not load reports: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  async function setReportStatus(id, status) {
+    try {
+      await API.updateReportStatus(id, status);
+      loadReports();
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  loadStats();
+  loadAlerts();
+  loadReports();
+</script>
+</body>
+</html>
