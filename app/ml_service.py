@@ -45,9 +45,10 @@ class MLService:
         self.category_classifier = joblib.load(MODELS_DIR / "category_classifier.joblib")
 
         # classes_ is ordered [not-fake, fake] per model_training.py's encode_labels()
-        self.fake_index = list(self.label_encoder.classes_).index(
-            [c for c in self.label_encoder.classes_ if "fake" in str(c).lower()][0]
-        ) if any("fake" in str(c).lower() for c in self.label_encoder.classes_) else 1
+        # Dataset encoding:
+        # 0 = Fake
+        # 1 = Genuine
+        self.fake_index = 0
 
     def classify(self, raw_text: str) -> dict:
         """

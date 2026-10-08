@@ -19,7 +19,6 @@ class Token(BaseModel):
 class NewsSubmit(BaseModel):
     text: str = Field(..., min_length=10, description="Raw news/article text to check")
 
-
 class NewsResult(BaseModel):
     id: int
     prediction: str
@@ -28,8 +27,9 @@ class NewsResult(BaseModel):
     is_repeated: bool
     matched_fake_news_id: Optional[int] = None
     similarity_score: Optional[float] = None
+    detection_count: int
+    severity: str
     alert_raised: bool
-
 
 class HistoryItem(BaseModel):
     id: int

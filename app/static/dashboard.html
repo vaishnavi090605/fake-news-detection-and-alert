@@ -1,205 +1,668 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dashboard — TruthGuard AI</title>
-<link rel="stylesheet" href="/static/css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TruthGuard AI — Dashboard</title>
+  <link rel="stylesheet" href="/static/css/truthguard.css">
 </head>
+
 <body>
-<div class="app">
-  <div class="sidebar">
-    <div class="brand"><span class="dot"></span><span>TruthGuard AI</span></div>
-    <nav class="nav">
-      <a href="/static/dashboard.html" class="active">🔎 Check News</a>
-      <a href="#" onclick="showHistory(); return false;">🕘 History</a>
-      <a href="#" onclick="document.getElementById('reportModal').style.display='flex'; return false;">🚩 Report News</a>
+
+<div class="tg-shell">
+
+  <aside class="tg-sidebar">
+    <div class="tg-brand">
+      <div class="tg-logo">TG</div>
+      <div>
+        <strong>TruthGuard AI</strong>
+        <span>Verify · Protect</span>
+      </div>
+    </div>
+
+    <nav class="tg-nav">
+      <a class="active" href="#analyzer">Dashboard</a>
+      <a href="#analyzer">Check News</a>
+      <a href="#history">History</a>
+      <a href="#about">About</a>
     </nav>
-    <div class="sidebar-footer">
-      <span id="whoami">—</span>
-      <button onclick="API.logout()">Logout</button>
-    </div>
-  </div>
 
-  <div class="main">
-    <div class="topbar">
-      <h1>Check News</h1>
-      <span class="role-badge" id="roleBadge">user</span>
-    </div>
-
-    <div class="grid grid-2">
-      <!-- Submit card -->
-      <div class="card">
-        <h2>Paste a news article or social media post <small>to check if it's fake or genuine</small></h2>
-        <textarea id="newsText" placeholder="Paste the news text here..."></textarea>
-        <div style="margin-top:12px; display:flex; gap:10px;">
-          <button class="btn" id="submitBtn" onclick="checkNews()">Analyze</button>
-          <button class="btn secondary" onclick="document.getElementById('newsText').value=''; document.getElementById('resultBox').style.display='none';">Clear</button>
-        </div>
-
-        <div id="resultBox" class="result-box" style="display:none;">
-          <div class="result-row">
-            <span class="badge" id="predictionBadge">—</span>
-            <span class="badge category" id="categoryBadge">—</span>
-          </div>
-          <div style="font-size:12.5px; color:var(--text-dim); margin-bottom:4px;">Confidence</div>
-          <div class="confidence-bar"><div class="fill" id="confidenceFill" style="width:0%;"></div></div>
-          <div style="font-size:12px; color:var(--text-dim); margin-top:4px;" id="confidenceLabel">0%</div>
-          <div id="repeatedAlert" style="display:none;" class="alert-banner"></div>
+    <div class="tg-sidebar-bottom">
+      <div class="tg-user">
+        <div class="tg-avatar" id="avatar">LA</div>
+        <div>
+          <strong id="whoami">lakshmiuser</strong>
+          <span id="roleBadge">User</span>
         </div>
       </div>
 
-      <!-- Tips card -->
-      <div class="card">
-        <h2>How it works</h2>
-        <p style="color:var(--text-dim); font-size:12.5px; line-height:1.6;">
-          Your text is cleaned and compared against patterns learned from thousands of verified
-          fake and genuine articles using TF-IDF + Logistic Regression. If it's flagged Fake,
-          it's also compared against every previously detected fake story — if it closely
-          matches one already seen, it's marked as <b>repeated circulation</b> and may trigger an alert.
+      <button class="tg-logout" onclick="API.logout()">Logout</button>
+    </div>
+  </aside>
+
+
+  <main class="tg-main">
+
+    <header class="tg-topbar">
+      <div>
+        <span class="tg-eyebrow">AI-POWERED MISINFORMATION DETECTION</span>
+
+        <h1>Verify before you share.</h1>
+
+        <p>
+          Analyze suspicious news, detect repeated misinformation,
+          and understand the risk in seconds.
         </p>
       </div>
-    </div>
 
-    <!-- History section -->
-    <div class="card" style="margin-top:16px;">
-      <h2>Your Recent Checks</h2>
-      <div id="historyWrap">
-        <div class="empty-state">Loading...</div>
+      <div class="tg-status">
+        <span class="tg-status-dot"></span>
+        System Online
       </div>
-    </div>
-  </div>
+    </header>
+
+
+    <section id="analyzer" class="tg-analyzer">
+
+      <div class="tg-card-header">
+        <div>
+          <span class="tg-section-label">NEWS ANALYZER</span>
+
+          <h2>Check a news story</h2>
+
+          <p>
+            Paste a headline, article, social media post, or message below.
+          </p>
+        </div>
+
+        <div class="tg-shield">✓</div>
+      </div>
+
+
+      <textarea
+        id="newsText"
+        class="tg-textarea"
+        placeholder="Paste the news text you want to analyze..."
+      ></textarea>
+
+
+      <div class="tg-analyzer-footer">
+
+        <div class="tg-examples">
+          <span>Try an example:</span>
+
+          <button onclick="setExample('government')">
+            Government announcement
+          </button>
+
+          <button onclick="setExample('viral')">
+            Viral social media post
+          </button>
+
+          <button onclick="setExample('news')">
+            News article
+          </button>
+        </div>
+
+
+        <button
+          id="submitBtn"
+          class="tg-primary"
+          onclick="checkNews()"
+        >
+          Analyze Story →
+        </button>
+
+      </div>
+
+
+      <div id="statusMessage" class="tg-status-message"></div>
+
+    </section>
+
+
+    <section
+      id="resultBox"
+      class="tg-result"
+      style="display:none;"
+    >
+
+      <div class="tg-result-header">
+
+        <div>
+          <span class="tg-section-label">ANALYSIS RESULT</span>
+          <h2 id="predictionBadge">—</h2>
+        </div>
+
+        <span id="severityBadge" class="tg-severity">—</span>
+
+      </div>
+
+
+      <div class="tg-result-grid">
+
+        <div class="tg-metric">
+          <span>Category</span>
+          <strong id="categoryBadge">—</strong>
+        </div>
+
+
+        <div class="tg-metric">
+
+          <span>Confidence</span>
+
+          <strong id="confidenceLabel">—</strong>
+
+          <div class="tg-progress">
+            <div id="confidenceFill"></div>
+          </div>
+
+        </div>
+
+
+        <div class="tg-metric">
+          <span>Similarity</span>
+          <strong id="similarityValue">—</strong>
+        </div>
+
+
+        <div class="tg-metric">
+          <span>Detection count</span>
+          <strong id="detectionCount">—</strong>
+        </div>
+
+      </div>
+
+
+      <div class="tg-match">
+
+        <span>Matched historical story</span>
+
+        <p id="matchedStory">
+          No repeated story detected.
+        </p>
+
+      </div>
+
+
+      <div
+        id="repeatedAlert"
+        class="tg-alert"
+        style="display:none;"
+      >
+        ⚠ This story appears to be circulating repeatedly.
+      </div>
+
+    </section>
+
+
+    <section class="tg-info-grid">
+
+      <div class="tg-info-card">
+        <span>01</span>
+        <h3>AI Classification</h3>
+
+        <p>
+          TF-IDF and Logistic Regression analyze linguistic patterns
+          and predict whether content resembles fake or genuine news.
+        </p>
+      </div>
+
+
+      <div class="tg-info-card">
+        <span>02</span>
+        <h3>Similarity Detection</h3>
+
+        <p>
+          New suspicious stories are compared with previously detected
+          fake stories using TF-IDF cosine similarity.
+        </p>
+      </div>
+
+
+      <div class="tg-info-card">
+        <span>03</span>
+        <h3>Risk Analysis</h3>
+
+        <p>
+          Prediction, similarity, and repetition are combined to
+          determine the risk level.
+        </p>
+      </div>
+
+
+      <div class="tg-info-card">
+        <span>04</span>
+        <h3>Alert System</h3>
+
+        <p>
+          Repeated misinformation can trigger alerts for administrators
+          so circulating stories can be reviewed.
+        </p>
+      </div>
+
+    </section>
+
+
+    <section id="history" class="tg-history">
+
+      <div class="tg-section-heading">
+
+        <div>
+          <span class="tg-section-label">ACTIVITY</span>
+          <h2>Recent checks</h2>
+        </div>
+
+      </div>
+
+
+      <div id="historyWrap" class="tg-history-table">
+        <div class="tg-loading">
+          Loading history...
+        </div>
+      </div>
+
+    </section>
+
+
+    <section id="about" class="tg-about">
+
+      <span class="tg-section-label">
+        ABOUT TRUTHGUARD AI
+      </span>
+
+      <h2>
+        Detect patterns. Reduce misinformation.
+      </h2>
+
+      <p>
+        TruthGuard AI is a final-year academic project combining
+        machine learning, similarity detection, database history,
+        and automated alerts to help identify repeated misinformation.
+      </p>
+
+    </section>
+
+  </main>
+
 </div>
 
-<!-- Report modal -->
-<div id="reportModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:50;">
-  <div class="card" style="width:420px;">
-    <h2>Report Suspicious News</h2>
-    <div class="field">
-      <label>News text</label>
-      <textarea id="reportText" placeholder="Paste the suspicious text here..."></textarea>
-    </div>
-    <div class="field">
-      <label>Reason (optional)</label>
-      <input type="text" id="reportReason" placeholder="Why do you think this is fake?" />
-    </div>
-    <div style="display:flex; gap:10px;">
-      <button class="btn" onclick="submitReport()">Submit Report</button>
-      <button class="btn secondary" onclick="document.getElementById('reportModal').style.display='none';">Cancel</button>
-    </div>
-    <div class="error-msg" id="reportMsg"></div>
-  </div>
-</div>
+
+<a
+  class="tg-map"
+  href="https://www.google.com/maps/dir/?api=1&destination=Anurag+University%2C+Hyderabad%2C+Ghatkesar+Rd%2C+Venkatapur%2C+Hyderabad%2C+Majarguda%2C+Telangana+500088"
+  target="_blank"
+  rel="noopener"
+>
+  <span>⌖</span>
+  Anurag University
+</a>
+
 
 <script src="/static/js/api.js"></script>
-<script>
-  API.requireAuth();
-  document.getElementById("whoami").textContent = API.getUsername() || "user";
-  document.getElementById("roleBadge").textContent = API.getRole() || "user";
 
-  async function checkNews() {
-    const text = document.getElementById("newsText").value.trim();
-    if (text.length < 10) {
-      alert("Please paste a longer piece of text (at least 10 characters).");
+
+<script>
+
+const examples = {
+
+  government:
+    "The Government of India has announced that every college student will receive a free MacBook worth ₹1 lakh from October 2026 without any application.",
+
+  viral:
+    "BREAKING: Secret government documents leaked revealing a shocking cover-up. Share this before it gets deleted.",
+
+  news:
+    "The central bank announced a quarter-point interest rate increase following its monthly policy meeting."
+
+};
+
+
+function setExample(type) {
+
+  document.getElementById("newsText").value =
+    examples[type];
+
+  document.getElementById("newsText").focus();
+
+}
+
+
+function escapeHtml(value) {
+
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+async function checkNews() {
+
+  const text =
+    document.getElementById("newsText").value.trim();
+
+  const button =
+    document.getElementById("submitBtn");
+
+  const status =
+    document.getElementById("statusMessage");
+
+
+  if (!text) {
+
+    status.textContent =
+      "Please enter some news text first.";
+
+    return;
+  }
+
+
+  button.disabled = true;
+
+  button.textContent = "Analyzing...";
+
+  status.textContent = "";
+
+
+  try {
+
+    const data =
+      await API.predict(text);
+
+    renderResult(data);
+
+    await showHistory();
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    status.textContent =
+      error.message ||
+      "Unable to analyze this story.";
+
+  }
+
+  finally {
+
+    button.disabled = false;
+
+    button.textContent =
+      "Analyze Story →";
+
+  }
+
+}
+
+
+function renderResult(data) {
+
+  document.getElementById("resultBox")
+    .style.display = "block";
+
+
+  const prediction =
+    data.prediction || "Unknown";
+
+  const confidence =
+    Number(data.confidence || 0);
+
+  const category =
+    data.category || "Other";
+
+
+  document.getElementById("predictionBadge")
+    .textContent = prediction;
+
+
+  document.getElementById("categoryBadge")
+    .textContent = category;
+
+
+  const percent =
+    confidence <= 1
+      ? confidence * 100
+      : confidence;
+
+
+  document.getElementById("confidenceLabel")
+    .textContent =
+      percent.toFixed(1) + "%";
+
+
+  document.getElementById("confidenceFill")
+    .style.width =
+      Math.min(100, percent) + "%";
+
+
+  document.getElementById("similarityValue")
+    .textContent =
+      data.similarity_score != null
+        ? (Number(data.similarity_score) * 100).toFixed(1) + "%"
+        : "—";
+
+
+  document.getElementById("detectionCount")
+    .textContent =
+      data.detection_count ??
+      data.detectionCount ??
+      "—";
+
+
+  document.getElementById("matchedStory")
+    .textContent =
+      data.is_repeated
+      ? "Similar historical fake story detected."
+      : "No repeated story detected.";
+
+
+  document.getElementById("severityBadge")
+    .textContent =
+      data.severity || "Low";
+
+
+  const repeated =
+    Boolean(
+      data.is_repeated
+    );
+
+
+  document.getElementById("repeatedAlert")
+    .style.display =
+      repeated
+        ? "block"
+        : "none";
+
+}
+
+
+async function showHistory() {
+
+  const wrap =
+    document.getElementById("historyWrap");
+
+
+  try {
+
+    const data =
+      await API.history();
+
+
+    const rows =
+      Array.isArray(data)
+        ? data
+        : (
+            data.history ||
+            data.items ||
+            []
+          );
+
+
+    if (!rows.length) {
+
+      wrap.innerHTML =
+        '<div class="tg-loading">No checks yet.</div>';
+
       return;
     }
-    const btn = document.getElementById("submitBtn");
-    btn.disabled = true;
-    btn.textContent = "Analyzing...";
-    try {
-      const result = await API.predict(text);
-      renderResult(result);
-      showHistory();
-    } catch (err) {
-      alert("Error: " + err.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Analyze";
-    }
+
+
+    wrap.innerHTML = `
+
+      <div class="tg-history-head">
+
+        <span>STORY</span>
+        <span>RESULT</span>
+        <span>CONFIDENCE</span>
+        <span>CATEGORY</span>
+        <span>DATE</span>
+
+      </div>
+
+
+      ${rows.slice(0, 10).map(item => `
+
+        <div class="tg-history-row">
+
+          <span>
+            ${escapeHtml(
+              item.original_text ||
+              item.news_text ||
+              "—"
+            )}
+          </span>
+
+
+          <strong>
+            ${escapeHtml(
+              item.prediction ||
+              "—"
+            )}
+          </strong>
+
+
+          <span>
+            ${
+              item.confidence != null
+                ? (
+                    Number(item.confidence) * 100
+                  ).toFixed(0) + "%"
+                : "—"
+            }
+          </span>
+
+
+          <span>
+            ${escapeHtml(
+              item.category ||
+              "Other"
+            )}
+          </span>
+
+
+          <span>
+            ${escapeHtml(
+              item.checked_at ||
+              item.timestamp ||
+              "—"
+            )}
+          </span>
+
+        </div>
+
+      `).join("")}
+
+    `;
+
   }
 
-  function renderResult(result) {
-    const box = document.getElementById("resultBox");
-    box.style.display = "block";
+  catch (error) {
 
-    const predBadge = document.getElementById("predictionBadge");
-    predBadge.textContent = result.prediction === "Fake" ? "❌ Fake" : "✅ Genuine";
-    predBadge.className = "badge " + (result.prediction === "Fake" ? "fake" : "genuine");
+    console.error(error);
 
-    const catBadge = document.getElementById("categoryBadge");
-    catBadge.textContent = result.category;
+    wrap.innerHTML =
+      '<div class="tg-loading">Unable to load history.</div>';
 
-    const pct = Math.round(result.confidence * 100);
-    const fill = document.getElementById("confidenceFill");
-    fill.style.width = pct + "%";
-    fill.style.background = result.prediction === "Fake" ? "var(--red)" : "var(--green)";
-    document.getElementById("confidenceLabel").textContent =
-      `${result.prediction} — ${pct}% confidence`;
-
-    const alertBox = document.getElementById("repeatedAlert");
-    if (result.is_repeated) {
-      alertBox.style.display = "block";
-      alertBox.textContent = result.alert_raised
-        ? `⚠ This story has circulated before (similarity ${(result.similarity_score*100).toFixed(1)}%) — an alert has been raised for review.`
-        : `⚠ This story closely matches a previously detected fake article (similarity ${(result.similarity_score*100).toFixed(1)}%).`;
-    } else {
-      alertBox.style.display = "none";
-    }
   }
 
-  async function showHistory() {
-    const wrap = document.getElementById("historyWrap");
-    wrap.innerHTML = `<div class="empty-state">Loading...</div>`;
+}
+
+
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
+
     try {
-      const items = await API.history();
-      if (!items.length) {
-        wrap.innerHTML = `<div class="empty-state">No checks yet — analyze a news article above to get started.</div>`;
-        return;
+
+      if (API.requireAuth) {
+
+        API.requireAuth();
+
       }
-      let rows = items.map(i => `
-        <tr>
-          <td class="truncate">${escapeHtml(i.original_text)}</td>
-          <td><span class="badge ${i.prediction === 'Fake' ? 'fake' : 'genuine'}">${i.prediction}</span></td>
-          <td>${Math.round(i.confidence*100)}%</td>
-          <td><span class="badge category">${i.category || '—'}</span></td>
-          <td>${i.is_repeated ? '⚠ Repeated' : '—'}</td>
-          <td>${new Date(i.checked_at.replace(' ', 'T') + 'Z').toLocaleString()}</td>
-        </tr>
-      `).join("");
-      wrap.innerHTML = `
-        <table>
-          <thead><tr><th>Text</th><th>Result</th><th>Confidence</th><th>Category</th><th>Repeated</th><th>Checked</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>`;
-    } catch (err) {
-      wrap.innerHTML = `<div class="empty-state">Could not load history: ${escapeHtml(err.message)}</div>`;
+
+
+      if (API.getUsername) {
+
+        const username =
+          API.getUsername();
+
+
+        if (username) {
+
+          document.getElementById("whoami")
+            .textContent =
+              username;
+
+
+          document.getElementById("avatar")
+            .textContent =
+              username
+                .substring(0, 2)
+                .toUpperCase();
+
+        }
+
+      }
+
+
+      if (API.getRole) {
+
+        const role =
+          API.getRole();
+
+
+        if (role) {
+
+          document.getElementById("roleBadge")
+            .textContent =
+              role;
+
+        }
+
+      }
+
+
+      await showHistory();
+
     }
-  }
 
-  async function submitReport() {
-    const text = document.getElementById("reportText").value.trim();
-    const reason = document.getElementById("reportReason").value.trim();
-    const msg = document.getElementById("reportMsg");
-    if (text.length < 10) { msg.textContent = "Please paste a longer piece of text."; return; }
-    try {
-      await API.report(text, reason || null);
-      document.getElementById("reportModal").style.display = "none";
-      document.getElementById("reportText").value = "";
-      document.getElementById("reportReason").value = "";
-      msg.textContent = "";
-      alert("Report submitted. Thank you — our admin team will review it.");
-    } catch (err) {
-      msg.textContent = err.message;
+    catch (error) {
+
+      console.error(error);
+
     }
+
   }
 
-  function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
+);
 
-  showHistory();
 </script>
+
 </body>
 </html>
