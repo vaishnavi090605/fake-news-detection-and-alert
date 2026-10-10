@@ -115,6 +115,17 @@ def init_db():
     except Exception:
         pass
 
+    # Ensure default admin user (admin / admin123) is pre-configured
+    admin_exists = conn.execute("SELECT id FROM users WHERE username = 'admin'").fetchone()
+    if not admin_exists:
+        from passlib.context import CryptContext
+        pwd_ctx = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+        pw_hash = pwd_ctx.hash("admin123")
+        conn.execute(
+            "INSERT INTO users (username, email, password_hash, role, location, full_name) VALUES (?, ?, ?, ?, ?, ?)",
+            ("admin", "bachuvaishnavi098@gmail.com", pw_hash, "admin", "Anurag University, Hyderabad", "System Administrator"),
+        )
+
     conn.commit()
     conn.close()
     print(f"Database ready -> {DB_PATH}")
