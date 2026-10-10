@@ -1013,3 +1013,77 @@ body {
 .tg-modal-close:hover {
   color: var(--text-main);
 }
+
+/* Mobile Phone Responsiveness (All Smartphones) */
+@media (max-width: 768px) {
+  .tg-shell {
+    flex-direction: column !important;
+  }
+  .tg-sidebar {
+    width: 100% !important;
+    height: auto !important;
+    position: relative !important;
+    padding: 16px !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-color) !important;
+  }
+  .tg-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    margin-top: 12px !important;
+  }
+  .tg-nav-item {
+    padding: 8px 12px !important;
+    font-size: 0.82rem !important;
+  }
+  .tg-sidebar-bottom {
+    margin-top: 14px !important;
+    padding-top: 14px !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+  .tg-main {
+    padding: 20px 14px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .tg-hero-quote {
+    display: none !important;
+  }
+  .tg-hero-title {
+    font-size: 1.8rem !important;
+  }
+  .tg-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .tg-table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .tg-floating-location {
+    bottom: 10px !important;
+    right: 10px !important;
+    font-size: 0.72rem !important;
+    padding: 6px 10px !important;
+  }
+  .tg-analyzer-card {
+    padding: 16px !important;
+  }
+  .tg-modal {
+    padding: 16px !important;
+    max-width: 95vw !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .tg-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .tg-nav-item {
+    width: 48% !important;
+  }
+}
