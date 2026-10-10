@@ -15,6 +15,7 @@
       <a href="/static/admin.html" class="active">📊 Dashboard</a>
       <a href="#alertsSection" onclick="document.getElementById('alertsSection').scrollIntoView({behavior:'smooth'});">🚨 Alerts</a>
       <a href="#reportsSection" onclick="document.getElementById('reportsSection').scrollIntoView({behavior:'smooth'});">🚩 Reports</a>
+      <a href="/static/dashboard.html" style="color: #58a6ff; margin-top: 12px;">🖥️ News Detector View</a>
     </nav>
     <div class="sidebar-footer">
       <span id="whoami">—</span>
@@ -24,8 +25,13 @@
 
   <div class="main">
     <div class="topbar">
-      <h1>Admin Dashboard</h1>
-      <span class="role-badge">admin</span>
+      <div>
+        <h1 style="display:inline-block; margin-right: 12px;">Admin Dashboard</h1>
+        <span class="role-badge">admin</span>
+      </div>
+      <button onclick="API.logout()" class="btn secondary" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+        🚪 Log Out
+      </button>
     </div>
 
     <!-- Stat cards -->
@@ -58,6 +64,17 @@
     <div class="card" id="reportsSection" style="margin-top:16px;">
       <h2>🚩 User-Submitted Reports</h2>
       <div id="reportsWrap"><div class="empty-state">Loading...</div></div>
+    </div>
+
+    <!-- Admin Bottom Footer -->
+    <div class="card" style="margin-top:24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: rgba(15, 23, 42, 0.45); border: 1px solid rgba(255, 255, 255, 0.08);">
+      <div style="font-size: 0.9rem; color: #9797a3;">
+        Logged into <strong style="color: #fff;">TruthGuard AI Admin Console</strong>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <a href="/static/dashboard.html" class="btn secondary" style="color: #58a6ff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-weight: 600;">🖥️ News Detector View</a>
+        <button onclick="API.logout()" class="btn" style="background: #ef4444; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer;">🚪 Log Out & Switch User</button>
+      </div>
     </div>
   </div>
 </div>

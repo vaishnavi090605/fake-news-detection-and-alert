@@ -63,11 +63,16 @@ class MLService:
         cleaned = clean_text(raw_text)
 
         vec = self.vectorizer.transform([cleaned])
-        proba = self.model.predict_proba(vec)[0]  # [P(not-fake), P(fake)]
+
+        proba = self.model.predict_proba(vec)[0]  # [P(fake), P(genuine)]
         pred_index = int(proba.argmax())
         confidence = float(proba[pred_index])
 
-        prediction = "Fake" if pred_index == self.fake_index else "Genuine"
+        # If model probability is near 50% (between 45% and 58%), flag as Inconclusive
+        if 0.45 <= proba[self.fake_index] <= 0.58:
+            prediction = "Inconclusive"
+        else:
+            prediction = "Fake" if pred_index == self.fake_index else "Genuine"
 
         cat_vec = self.category_vectorizer.transform([cleaned])
         category = self.category_classifier.predict(cat_vec)[0]
@@ -78,6 +83,7 @@ class MLService:
             "confidence": round(confidence, 4),
             "category": category,
         }
+
 
 
 # Singleton — loaded once when the FastAPI app starts, reused across requests

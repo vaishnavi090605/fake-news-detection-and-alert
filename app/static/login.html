@@ -1,35 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Fake News Detection — Sign In</title>
-<link rel="stylesheet" href="/static/css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TruthGuard AI — Sign In / Register</title>
+  <link rel="stylesheet" href="/static/css/truthguard.css" />
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg-dark);
+      padding: 20px;
+    }
+    .auth-container {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+    .auth-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .auth-tabs {
+      display: flex;
+      background: rgba(7, 11, 22, 0.6);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .auth-tab-btn.active {
+      background: var(--accent-gradient);
+      color: white;
+      box-shadow: var(--accent-glow);
+    }
+    .field {
+      margin-bottom: 18px;
+    }
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .field input {
+      width: 100%;
+      background: rgba(7, 11, 22, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+      transition: var(--transition);
+    }
+    .field input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: var(--accent-glow);
+    }
+    .error-msg {
+      color: var(--danger-color);
+      font-size: 0.85rem;
+      margin-top: 12px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-<div class="auth-wrap">
-  <div class="auth-card">
-    <div class="brand" style="padding:0 0 18px 0;">
-      <span class="dot"></span>
-      <span>TruthGuard AI</span>
+
+  <!-- Ambient Glow Orbs -->
+  <div class="bg-glow-orb-1"></div>
+  <div class="bg-glow-orb-2"></div>
+
+  <div class="auth-container">
+    <div class="auth-brand">
+      <div class="tg-brand-logo">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
+      <div style="text-align: center;">
+        <h2 class="tg-brand-title" style="font-size: 1.5rem;">TruthGuard AI</h2>
+        <span class="tg-brand-subtitle">Detect · Verify · Protect</span>
+      </div>
+    </div>
+
+    <!-- ACTIVE SESSION BANNER (if already logged in) -->
+    <div id="sessionBanner" style="display:none; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: center;">
+      <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 8px;">
+        👤 Currently logged in as <strong id="sessionUser" style="color: #38bdf8;"></strong> (<span id="sessionRole"></span>)
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="tg-example-btn" style="padding: 5px 12px; font-size: 0.8rem; background: #38bdf8; color: #020617; font-weight: 600;" onclick="goToActiveDashboard()">Go to Dashboard ➔</button>
+        <button type="button" class="tg-example-btn" style="padding: 5px 12px; font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4);" onclick="handleForceLogout()">🚪 Log Out to Switch Account</button>
+      </div>
     </div>
 
     <div class="auth-tabs">
-      <button id="tabLogin" class="active" onclick="switchTab('login')">Login</button>
-      <button id="tabRegister" onclick="switchTab('register')">Register</button>
+      <button id="tabLogin" class="auth-tab-btn active" onclick="switchTab('login')">Sign In</button>
+      <button id="tabRegister" class="auth-tab-btn" onclick="switchTab('register')">Register</button>
     </div>
 
     <!-- LOGIN FORM -->
     <form id="loginForm" onsubmit="return handleLogin(event)">
       <div class="field">
         <label>Username</label>
-        <input type="text" id="loginUsername" required autocomplete="username" />
+        <input type="text" id="loginUsername" required autocomplete="username" placeholder="Enter your username (e.g. admin)" />
       </div>
       <div class="field">
         <label>Password</label>
-        <input type="password" id="loginPassword" required autocomplete="current-password" />
+        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Enter your password (e.g. admin123)" />
       </div>
-      <button class="btn" style="width:100%;" type="submit">Sign In</button>
+      <button class="tg-analyze-btn" style="width: 100%; justify-content: center;" type="submit">Sign In</button>
       <div class="error-msg" id="loginError"></div>
     </form>
 
@@ -37,73 +143,132 @@
     <form id="registerForm" style="display:none;" onsubmit="return handleRegister(event)">
       <div class="field">
         <label>Username</label>
-        <input type="text" id="regUsername" required minlength="3" />
+        <input type="text" id="regUsername" required minlength="3" placeholder="Choose a username" />
       </div>
       <div class="field">
-        <label>Email</label>
-        <input type="email" id="regEmail" required />
+        <label>Email Address</label>
+        <input type="email" id="regEmail" required placeholder="name@example.com" />
       </div>
       <div class="field">
         <label>Password</label>
-        <input type="password" id="regPassword" required minlength="6" />
+        <input type="password" id="regPassword" required minlength="6" placeholder="At least 6 characters" />
       </div>
       <div class="field">
-        <label>Admin Code <span class="hint" style="display:inline;">(optional — leave blank for a normal account)</span></label>
-        <input type="text" id="regAdminCode" placeholder="Only if you're registering as admin" />
+        <label>Admin Code <span style="font-size:0.75rem; color: var(--text-sub);">(optional)</span></label>
+        <input type="text" id="regAdminCode" placeholder="Enter code if registering as admin (letmein-admin)" />
       </div>
-      <button class="btn" style="width:100%;" type="submit">Create Account</button>
+      <button class="tg-analyze-btn" style="width: 100%; justify-content: center;" type="submit">Create Account</button>
       <div class="error-msg" id="registerError"></div>
     </form>
+
+    <div style="text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+      <button type="button" onclick="handleForceLogout()" style="background: none; border: none; color: #ef4444; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+        <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Clear Session / Log Out All</span>
+      </button>
+    </div>
   </div>
-</div>
 
-<script src="/static/js/api.js"></script>
-<script>
-  // Already logged in? Skip straight to the right dashboard.
-  if (API.getToken()) {
-    window.location.href = API.getRole() === "admin" ? "/static/admin.html" : "/static/dashboard.html";
-  }
-
-  function switchTab(which) {
-    document.getElementById("tabLogin").classList.toggle("active", which === "login");
-    document.getElementById("tabRegister").classList.toggle("active", which === "register");
-    document.getElementById("loginForm").style.display = which === "login" ? "block" : "none";
-    document.getElementById("registerForm").style.display = which === "register" ? "block" : "none";
-  }
-
-  async function handleLogin(e) {
-    e.preventDefault();
-    const errEl = document.getElementById("loginError");
-    errEl.textContent = "";
-    const username = document.getElementById("loginUsername").value.trim();
-    const password = document.getElementById("loginPassword").value;
-    try {
-      const data = await API.login(username, password);
-      API.setSession(data.access_token, data.role, username);
-      window.location.href = data.role === "admin" ? "/static/admin.html" : "/static/dashboard.html";
-    } catch (err) {
-      errEl.textContent = err.message;
+  <script src="/static/js/api.js"></script>
+  <script>
+    if (window.location.search.includes('logout')) {
+      API.clearSession();
     }
-    return false;
-  }
 
-  async function handleRegister(e) {
-    e.preventDefault();
-    const errEl = document.getElementById("registerError");
-    errEl.textContent = "";
-    const username = document.getElementById("regUsername").value.trim();
-    const email = document.getElementById("regEmail").value.trim();
-    const password = document.getElementById("regPassword").value;
-    const adminCode = document.getElementById("regAdminCode").value.trim();
-    try {
-      const data = await API.register(username, email, password, adminCode || null);
-      API.setSession(data.access_token, data.role, username);
-      window.location.href = data.role === "admin" ? "/static/admin.html" : "/static/dashboard.html";
-    } catch (err) {
-      errEl.textContent = err.message;
+    function checkActiveSession() {
+      const token = API.getToken();
+      const banner = document.getElementById("sessionBanner");
+      if (token) {
+        const user = API.getUsername() || "User";
+        const role = API.getRole() || "user";
+        document.getElementById("sessionUser").textContent = user;
+        document.getElementById("sessionRole").textContent = role.toUpperCase();
+        if (banner) banner.style.display = "block";
+      } else {
+        if (banner) banner.style.display = "none";
+      }
     }
-    return false;
-  }
-</script>
+
+    function goToActiveDashboard() {
+      window.location.href = API.getRole() === "admin" ? "/static/admin.html" : "/static/dashboard.html";
+    }
+
+    function handleForceLogout() {
+      API.clearSession();
+      const banner = document.getElementById("sessionBanner");
+      if (banner) banner.style.display = "none";
+      const err = document.getElementById("loginError");
+      if (err) {
+        err.style.color = "var(--success-color)";
+        err.textContent = "Successfully logged out. You can now sign in with any account.";
+      }
+    }
+
+    checkActiveSession();
+
+    function switchTab(which) {
+      document.getElementById("tabLogin").classList.toggle("active", which === "login");
+      document.getElementById("tabRegister").classList.toggle("active", which === "register");
+      document.getElementById("loginForm").style.display = which === "login" ? "block" : "none";
+      document.getElementById("registerForm").style.display = which === "register" ? "block" : "none";
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const errEl = document.getElementById("loginError");
+      errEl.textContent = "";
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      try {
+        const data = await API.login(username, password);
+        API.setSession(data.access_token, data.role, username);
+        window.location.href = data.role === "admin" ? "/static/admin.html" : "/static/dashboard.html";
+      } catch (err) {
+        errEl.textContent = err.message;
+      }
+      return false;
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const errEl = document.getElementById("registerError");
+      errEl.innerHTML = "";
+      const username = document.getElementById("regUsername").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const adminCode = document.getElementById("regAdminCode").value.trim();
+
+      if (!username || !email || !password) {
+        errEl.textContent = "Please fill in all required fields.";
+        return false;
+      }
+
+      if (password.length < 6) {
+        errEl.textContent = "Password must be at least 6 characters.";
+        return false;
+      }
+
+      try {
+        const data = await API.register(username, email, password, adminCode || null);
+        API.setSession(data.access_token, data.role, username);
+        window.location.href = data.role === "admin" ? "/static/admin.html" : "/static/dashboard.html";
+      } catch (err) {
+        const msg = err.message || "Registration failed.";
+        if (msg.toLowerCase().includes("already registered")) {
+          errEl.innerHTML = `⚠️ <strong>${msg}</strong><br><button type="button" class="tg-example-btn" style="margin-top:8px; padding:4px 12px;" onclick="goToLoginWith('${username}')">Sign In as ${username} ➔</button>`;
+        } else {
+          errEl.textContent = msg;
+        }
+      }
+      return false;
+    }
+
+    function goToLoginWith(u) {
+      switchTab('login');
+      document.getElementById('loginUsername').value = u;
+      document.getElementById('loginPassword').focus();
+    }
+
+  </script>
 </body>
 </html>

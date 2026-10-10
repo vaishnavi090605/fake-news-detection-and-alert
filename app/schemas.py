@@ -18,6 +18,12 @@ class Token(BaseModel):
 
 class NewsSubmit(BaseModel):
     text: str = Field(..., min_length=10, description="Raw news/article text to check")
+    category: Optional[str] = "General News"
+    source_url: Optional[str] = None
+    submission_category: Optional[str] = "news_article"  # news_article, social_media_post, forwarded_message
+    evidence_link: Optional[str] = None
+    user_location: Optional[str] = None
+
 
 class NewsResult(BaseModel):
     id: int
@@ -30,6 +36,26 @@ class NewsResult(BaseModel):
     detection_count: int
     severity: str
     alert_raised: bool
+    is_inconclusive: bool = False
+    reasons: Optional[list[str]] = None
+    user_fake_count: int = 1
+    police_escalation: bool = False
+    nearest_police_station: Optional[dict] = None
+    person_location: Optional[str] = None
+
+
+class ProfileUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    location: Optional[str] = None
+    full_name: Optional[str] = None
+
+class UserProfile(BaseModel):
+    id: int
+    username: str
+    email: str
+    role: str
+    location: Optional[str] = None
+    created_at: str
 
 class HistoryItem(BaseModel):
     id: int

@@ -34,6 +34,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
@@ -104,53 +105,15 @@ VERIFIED_FAKE_LABEL = 0
 
 
 def encode_labels(y_train, y_test):
-    """
-    Makes sure labels are 0/1 regardless of whether news_dataset.csv used
-    numeric labels (0/1) or text labels (e.g. 'FAKE'/'REAL', 'fake'/'genuine'),
-    and forces 'Fake' -> 1 so precision/recall/F1/ROC-AUC and the dashboard's
-    confidence score always describe the Fake class consistently.
-
-    IMPORTANT: for numeric labels, "fake" string-matching is impossible —
-    0 and 1 carry no semantic meaning on their own. This function trusts
-    VERIFIED_FAKE_LABEL (set above from an empirical check against the real
-    data) rather than guessing, because guessing wrong here silently
-    inverts every prediction the whole app makes.
-    """
     encoder = LabelEncoder()
-    encoder.fit(y_train)
+    fake_label = VERIFIED_FAKE_LABEL
+    encoder.classes_ = np.array(["Fake", "Genuine"])
 
-    mapping = {cls: int(code) for code, cls in enumerate(encoder.classes_)}
-    if len(mapping) != 2:
-        raise ValueError(
-            f"Expected exactly 2 classes, found {len(mapping)}: {list(mapping.keys())}. "
-            "Check the 'label' column in news_cleaned.csv."
-        )
+    y_train_enc = np.where(y_train == fake_label, 0, 1)
+    y_test_enc = np.where(y_test == fake_label, 0, 1)
 
-    # Try text-label detection first (handles 'FAKE'/'REAL' style datasets)
-    fake_candidates = [k for k in mapping if "fake" in str(k).lower()]
-
-    if fake_candidates:
-        fake_label = fake_candidates[0]
-    elif VERIFIED_FAKE_LABEL in mapping:
-        # Numeric labels — use the empirically-verified value, not a guess
-        fake_label = VERIFIED_FAKE_LABEL
-    else:
-        raise ValueError(
-            f"Could not determine which label means 'Fake'. Labels found: "
-            f"{list(mapping.keys())}. VERIFIED_FAKE_LABEL is set to "
-            f"{VERIFIED_FAKE_LABEL}, which isn't one of them. Re-verify by "
-            "checking a known-fake article's label in news_cleaned.csv and "
-            "update VERIFIED_FAKE_LABEL at the top of this file."
-        )
-
-    other_label = [k for k in mapping if k != fake_label][0]
-    encoder.classes_ = np.array([other_label, fake_label])
-    mapping = {other_label: 0, fake_label: 1}
-
-    print(f"\nLabel mapping in use: {mapping}  (1 = Fake, verified against real data)")
-
-    y_train_enc = encoder.transform(y_train)
-    y_test_enc = encoder.transform(y_test)
+    mapping = {"Fake": 0, "Genuine": 1}
+    print(f"\nLabel mapping in use: {mapping} (0 = Fake, verified against real data)")
 
     return y_train_enc, y_test_enc, encoder
 
@@ -174,9 +137,9 @@ def evaluate_model(model, X_test, y_test, label_encoder):
 
     metrics = {
         "accuracy": round(accuracy_score(y_test, y_pred), 4),
-        "precision": round(precision_score(y_test, y_pred), 4),
-        "recall": round(recall_score(y_test, y_pred), 4),
-        "f1_score": round(f1_score(y_test, y_pred), 4),
+        "precision": round(precision_score(y_test, y_pred, pos_label=0, zero_division=0), 4),
+        "recall": round(recall_score(y_test, y_pred, pos_label=0, zero_division=0), 4),
+        "f1_score": round(f1_score(y_test, y_pred, pos_label=0, zero_division=0), 4),
         "roc_auc": round(roc_auc_score(y_test, y_proba), 4),
     }
 

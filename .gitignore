@@ -5,10 +5,6 @@ __pycache__/
 data/raw/
 data/processed/
 
-models/
-*.pkl
-*.joblib
-
 .DS_Store
 .env
 database/*.db

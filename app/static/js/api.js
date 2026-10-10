@@ -83,16 +83,68 @@ const API = {
     });
   },
 
-  predict(text) {
-    return this.request("/predict", { method: "POST", body: { text } });
+  predict(text, category, source_url, evidence_link, user_location) {
+    const body = { text };
+    if (category) body.category = category;
+    if (source_url) body.source_url = source_url;
+    if (evidence_link) body.evidence_link = evidence_link;
+    if (user_location) body.user_location = user_location;
+    return this.request("/predict", { method: "POST", body });
   },
+
 
   history() {
     return this.request("/history");
   },
 
+  stats() {
+    return this.request("/stats");
+  },
+
+  alerts() {
+    return this.request("/alerts");
+  },
+
+  userReports() {
+    return this.request("/user/reports");
+  },
+
   report(text, reason) {
     return this.request("/report", { method: "POST", body: { text, reason } });
+  },
+
+  getProfile() {
+    return this.request("/user/profile");
+  },
+
+  updateProfile(data) {
+    return this.request("/user/profile", { method: "PUT", body: data });
+  },
+
+  async exportCSV() {
+    const token = this.getToken();
+    try {
+      const res = await fetch(this.base + "/reports/export/csv", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to download CSV");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "truthguard_analysis_report.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      window.location.href = `/reports/export/csv?token=${encodeURIComponent(token)}`;
+    }
+  },
+
+
+  generatePoliceReport(alertId = 1) {
+    return this.request(`/police-report/${alertId}`, { method: "POST" });
   },
 
   adminStats() {

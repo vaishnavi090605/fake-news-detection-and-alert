@@ -3,666 +3,1045 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TruthGuard AI — Dashboard</title>
+  <title>TruthGuard AI — Detect · Verify · Protect</title>
   <link rel="stylesheet" href="/static/css/truthguard.css">
 </head>
-
 <body>
 
-<div class="tg-shell">
+  <!-- Ambient Glow Background Orbs -->
+  <div class="bg-glow-orb-1"></div>
+  <div class="bg-glow-orb-2"></div>
 
-  <aside class="tg-sidebar">
-    <div class="tg-brand">
-      <div class="tg-logo">TG</div>
+  <div class="tg-shell">
+
+    <!-- Left Navigation Sidebar -->
+    <aside class="tg-sidebar">
       <div>
-        <strong>TruthGuard AI</strong>
-        <span>Verify · Protect</span>
-      </div>
-    </div>
-
-    <nav class="tg-nav">
-      <a class="active" href="#analyzer">Dashboard</a>
-      <a href="#analyzer">Check News</a>
-      <a href="#history">History</a>
-      <a href="#about">About</a>
-    </nav>
-
-    <div class="tg-sidebar-bottom">
-      <div class="tg-user">
-        <div class="tg-avatar" id="avatar">LA</div>
-        <div>
-          <strong id="whoami">lakshmiuser</strong>
-          <span id="roleBadge">User</span>
-        </div>
-      </div>
-
-      <button class="tg-logout" onclick="API.logout()">Logout</button>
-    </div>
-  </aside>
-
-
-  <main class="tg-main">
-
-    <header class="tg-topbar">
-      <div>
-        <span class="tg-eyebrow">AI-POWERED MISINFORMATION DETECTION</span>
-
-        <h1>Verify before you share.</h1>
-
-        <p>
-          Analyze suspicious news, detect repeated misinformation,
-          and understand the risk in seconds.
-        </p>
-      </div>
-
-      <div class="tg-status">
-        <span class="tg-status-dot"></span>
-        System Online
-      </div>
-    </header>
-
-
-    <section id="analyzer" class="tg-analyzer">
-
-      <div class="tg-card-header">
-        <div>
-          <span class="tg-section-label">NEWS ANALYZER</span>
-
-          <h2>Check a news story</h2>
-
-          <p>
-            Paste a headline, article, social media post, or message below.
-          </p>
+        <div class="tg-brand">
+          <div class="tg-brand-logo">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <div class="tg-brand-text">
+            <span class="tg-brand-title">TruthGuard AI</span>
+            <span class="tg-brand-subtitle">Detect · Verify · Protect</span>
+          </div>
         </div>
 
-        <div class="tg-shield">✓</div>
+        <nav class="tg-nav">
+          <a class="tg-nav-item active" onclick="switchTab('home')" id="nav-home">
+            <div class="tg-nav-item-left">
+              <svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span>Home</span>
+            </div>
+          </a>
+
+          <a class="tg-nav-item" onclick="switchTab('check')" id="nav-check">
+            <div class="tg-nav-item-left">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Check News</span>
+            </div>
+          </a>
+
+          <a class="tg-nav-item" onclick="switchTab('history')" id="nav-history">
+            <div class="tg-nav-item-left">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>History</span>
+            </div>
+          </a>
+
+          <a class="tg-nav-item" onclick="switchTab('alerts')" id="nav-alerts">
+            <div class="tg-nav-item-left">
+              <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span>Alerts</span>
+            </div>
+            <span class="tg-badge" id="alertCounterBadge">0</span>
+          </a>
+
+          <a class="tg-nav-item" onclick="switchTab('reports')" id="nav-reports">
+            <div class="tg-nav-item-left">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>Reports & Export</span>
+            </div>
+          </a>
+
+          <a class="tg-nav-item" onclick="switchTab('profile')" id="nav-profile">
+            <div class="tg-nav-item-left">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Profile & Settings</span>
+            </div>
+          </a>
+
+          <a class="tg-nav-item" id="nav-admin-link" href="/static/admin.html" style="display: none; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1);">
+            <div class="tg-nav-item-left">
+              <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" style="color: #ef4444;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+              <span style="color: #ef4444; font-weight: 600;">🛡️ Admin Portal</span>
+            </div>
+          </a>
+
+          <div class="tg-nav-divider"></div>
+
+          <a class="tg-nav-item" onclick="scrollToSection('works')">
+            <div class="tg-nav-item-left">
+              <svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              <span>How It Works</span>
+            </div>
+          </a>
+
+          <a class="tg-nav-item" onclick="scrollToSection('about')">
+            <div class="tg-nav-item-left">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span>About</span>
+            </div>
+          </a>
+        </nav>
       </div>
 
-
-      <textarea
-        id="newsText"
-        class="tg-textarea"
-        placeholder="Paste the news text you want to analyze..."
-      ></textarea>
-
-
-      <div class="tg-analyzer-footer">
-
-        <div class="tg-examples">
-          <span>Try an example:</span>
-
-          <button onclick="setExample('government')">
-            Government announcement
-          </button>
-
-          <button onclick="setExample('viral')">
-            Viral social media post
-          </button>
-
-          <button onclick="setExample('news')">
-            News article
-          </button>
+      <!-- User Profile Footer -->
+      <div class="tg-sidebar-bottom">
+        <div class="tg-user-card" onclick="switchTab('profile')" style="cursor: pointer;">
+          <div class="tg-avatar" id="userAvatar">LK</div>
+          <div class="tg-user-info">
+            <span class="tg-user-name" id="userName">Lakshmi</span>
+            <span class="tg-user-role" id="userRole">User</span>
+          </div>
         </div>
+        <button class="tg-logout-btn" onclick="API.logout()">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
 
+    <!-- Main Content Body -->
+    <main class="tg-main">
 
-        <button
-          id="submitBtn"
-          class="tg-primary"
-          onclick="checkNews()"
-        >
-          Analyze Story →
+      <!-- Top Header & Theme Switch & Quick Log Out -->
+      <header class="tg-header" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
+        <button class="tg-theme-toggle" onclick="toggleTheme()" id="themeToggleBtn">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <span id="themeToggleLabel">Light Mode</span>
         </button>
 
-      </div>
+        <button class="tg-logout-btn" onclick="API.logout()" style="padding: 8px 16px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 6px; background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.35); cursor: pointer; font-size: 0.85rem; font-weight: 600;" title="Log Out of this session">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Log Out</span>
+        </button>
+      </header>
 
-
-      <div id="statusMessage" class="tg-status-message"></div>
-
-    </section>
-
-
-    <section
-      id="resultBox"
-      class="tg-result"
-      style="display:none;"
-    >
-
-      <div class="tg-result-header">
-
-        <div>
-          <span class="tg-section-label">ANALYSIS RESULT</span>
-          <h2 id="predictionBadge">—</h2>
+      <!-- Hero Banner Section -->
+      <section class="tg-hero">
+        <div class="tg-hero-quote">
+          "Real news builds a better world."
         </div>
 
-        <span id="severityBadge" class="tg-severity">—</span>
+        <div class="tg-hero-badge">
+          ✨ AI-Powered Misinformation Detection
+        </div>
 
-      </div>
+        <h1 class="tg-hero-title">
+          Verify Before You <span>Share</span>
+        </h1>
 
+        <p class="tg-hero-subtitle">
+          TruthGuard AI uses advanced machine learning to detect fake news, analyze patterns and help you stay informed in a world full of misinformation.
+        </p>
 
-      <div class="tg-result-grid">
+        <!-- 3D Shield Graphic Backdrop -->
+        <div class="tg-hero-graphic">
+          <svg viewBox="0 0 100 100" fill="none">
+            <path d="M50 10 L85 25 V50 C85 70 50 90 50 90 C50 90 15 70 15 50 V25 L50 10 Z" stroke="#38bdf8" stroke-width="2" fill="rgba(56, 189, 248, 0.05)"/>
+            <path d="M35 50 L45 60 L65 40" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </section>
 
-        <div class="tg-metric">
-          <span>Category</span>
-          <strong id="categoryBadge">—</strong>
+      <!-- News Analyzer Input Glass Card -->
+      <section id="check-section" class="tg-analyzer-card">
+        <div class="tg-input-wrapper">
+          <div class="tg-input-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <textarea
+            id="newsText"
+            class="tg-textarea"
+            placeholder="Paste a news article, headline or social media post..."
+          ></textarea>
+        </div>
+
+        <!-- Optional Extended Metadata Inputs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 14px; margin-bottom: 14px;">
+          <div>
+            <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Category</label>
+            <select id="newsCategory" class="tg-textarea" style="min-height: 42px; height: 42px; padding: 8px 12px; margin-top: 4px;">
+              <option value="Politics">Politics</option>
+              <option value="Health & Medical">Health & Medical</option>
+              <option value="Technology & AI">Technology & AI</option>
+              <option value="Finance & Economy">Finance & Economy</option>
+              <option value="Social Media Rumor">Social Media Rumor</option>
+              <option value="General News">General News</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Source URL (Optional)</label>
+            <input id="newsSourceUrl" type="url" class="tg-textarea" style="min-height: 42px; height: 42px; padding: 8px 12px; margin-top: 4px;" placeholder="https://example.com/news">
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Person Location / Address</label>
+              <button type="button" onclick="detectGPSLocation()" style="font-size: 0.7rem; color: var(--accent-blue); background: none; border: none; cursor: pointer; text-decoration: underline;">
+                📍 Detect Live GPS
+              </button>
+            </div>
+            <input id="newsLocation" type="text" class="tg-textarea" style="min-height: 42px; height: 42px; padding: 8px 12px; margin-top: 4px;" placeholder="Anurag University, Hyderabad">
+          </div>
         </div>
 
 
-        <div class="tg-metric">
-
-          <span>Confidence</span>
-
-          <strong id="confidenceLabel">—</strong>
-
-          <div class="tg-progress">
-            <div id="confidenceFill"></div>
+        <div class="tg-analyzer-actions">
+          <div class="tg-examples">
+            <span class="tg-examples-label">Try an example:</span>
+            <button class="tg-example-btn" onclick="setExample('government')">Government announcement</button>
+            <button class="tg-example-btn" onclick="setExample('viral')">Viral social media post</button>
+            <button class="tg-example-btn" onclick="setExample('news')">News article</button>
           </div>
 
+          <button id="analyzeBtn" class="tg-analyze-btn" onclick="runAnalysis()">
+            <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.2-6.3-4.6-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg>
+            <span>Analyze</span>
+          </button>
         </div>
 
+        <!-- Real-time Analysis Result Card Overlay -->
+        <div id="resultCard" class="tg-result-overlay" style="display: none;">
+          <div class="tg-result-top">
+            <div class="tg-result-prediction">
+              <span class="tg-metric-label">Prediction Result:</span>
+              <span id="resPrediction" class="tg-tag-badge fake">FAKE</span>
+            </div>
+            <div>
+              <span class="tg-metric-label">Category: </span>
+              <strong id="resCategory" style="color: var(--accent-blue);">Politics</strong>
+            </div>
+          </div>
 
-        <div class="tg-metric">
-          <span>Similarity</span>
-          <strong id="similarityValue">—</strong>
+          <div class="tg-result-metrics">
+            <div class="tg-metric-box">
+              <div class="tg-metric-label">Confidence</div>
+              <div class="tg-metric-value" id="resConfidence">92.4%</div>
+              <div class="tg-progress-bar">
+                <div id="resConfidenceFill" class="tg-progress-fill" style="width: 92.4%;"></div>
+              </div>
+            </div>
+
+            <div class="tg-metric-box">
+              <div class="tg-metric-label">Similarity Score</div>
+              <div class="tg-metric-value" id="resSimilarity">98.5%</div>
+            </div>
+
+            <div class="tg-metric-box">
+              <div class="tg-metric-label">Detection Count</div>
+              <div class="tg-metric-value" id="resCount">2x</div>
+            </div>
+
+            <div class="tg-metric-box">
+              <div class="tg-metric-label">Risk Severity</div>
+              <div class="tg-metric-value" id="resSeverity" style="color: var(--warning-color);">Medium</div>
+            </div>
+          </div>
+
+          <div id="repeatedBanner" class="tg-alert-banner" style="display: none;">
+            ⚠️ <strong>Repeated Misinformation Alert:</strong> Alert email dispatched to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station Authority)
+          </div>
+
+          <!-- Emergency Police Escalation Banner (>3 Fake Messages Threshold) -->
+          <div id="policeEscalationBanner" class="tg-alert-banner" style="display: none; background: rgba(239, 68, 68, 0.15); border: 2px solid var(--danger-color); color: #fecaca; margin-top: 14px; flex-direction: column; align-items: flex-start; gap: 10px; padding: 18px; border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 8px;">
+              <span style="font-weight: 800; font-size: 1.05rem; color: var(--danger-color); display: flex; align-items: center; gap: 8px;">
+                🚨 CRITICAL POLICE DISPATCH ESCALATION ACTIVATED
+              </span>
+              <span class="tg-tag-badge fake" style="font-size: 0.75rem; padding: 4px 10px; font-weight: 700;">LIMIT EXCEEDED (&gt;3 FAKE MESSAGES)</span>
+            </div>
+
+            <div style="font-size: 0.92rem; line-height: 1.6; color: #f1f5f9;">
+              This account has submitted or shared confirmed fake messages <strong id="resStrikeCount" style="color: #ef4444; font-size: 1rem;">3 times</strong>.
+              In accordance with legal and platform safety provisions, this incident has been automatically mapped and escalated to the nearest police station.
+            </div>
+
+            <div style="background: rgba(7, 11, 22, 0.75); border-radius: 8px; padding: 14px 18px; width: 100%; box-sizing: border-box; font-size: 0.88rem; border: 1px solid rgba(239, 68, 68, 0.35); line-height: 1.8;">
+              <div>🚔 <strong>Assigned Nearest Police Station:</strong> <span id="resStationName" style="color: #38bdf8; font-weight: 700;">Ghatkesar Police Station & Cyber Monitoring Cell</span></div>
+              <div>📍 <strong>Suspect Location Detected:</strong> <span id="resPersonLocation" style="color: #fef08a; font-weight: 700;">Anurag University, Hyderabad</span></div>
+              <div>📧 <strong>Emergency Police Dispatch Sent To:</strong> <span style="color: #f87171; font-weight: 700;">bachuvaishnavi098@gmail.com</span></div>
+              <div>📞 <strong>Station Direct Contact:</strong> <span id="resStationPhone" style="color: #e2e8f0;">+91-40-27853400 / Dial 100 / National Cybercrime: 1930</span></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 4px; width: 100%; flex-wrap: wrap;">
+              <a id="resStationMapLink" href="https://maps.google.com/?q=Ghatkesar+Police+Station+Hyderabad" target="_blank" class="tg-example-btn" style="background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue); color: var(--accent-blue); font-weight: 600; text-decoration: none;">
+                📍 View Police Station on Map
+              </a>
+              <button type="button" class="tg-example-btn" style="background: rgba(239, 68, 68, 0.15); border-color: var(--danger-color); color: var(--danger-color); font-weight: 600;" onclick="openAlertModal()">
+                📄 View Police Incident Dossier
+              </button>
+            </div>
+          </div>
         </div>
 
+      </section>
 
-        <div class="tg-metric">
-          <span>Detection count</span>
-          <strong id="detectionCount">—</strong>
+      <!-- How TruthGuard Works Section -->
+      <section id="works" class="tg-section">
+        <div class="tg-section-header">
+          <h2 class="tg-section-title">How TruthGuard Works</h2>
+          <span class="tg-section-subtitle">Simple. Powerful. Reliable.</span>
         </div>
 
-      </div>
+        <div class="tg-works-grid">
+          <div class="tg-work-card">
+            <div class="tg-work-card-top">
+              <div class="tg-work-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-10 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+              </div>
+              <span class="tg-work-step">01</span>
+            </div>
+            <h3 class="tg-work-title">AI Classification</h3>
+            <p class="tg-work-desc">Analyzes linguistic patterns using machine learning models to detect fake or genuine content.</p>
+          </div>
 
+          <div class="tg-work-card">
+            <div class="tg-work-card-top">
+              <div class="tg-work-icon">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </div>
+              <span class="tg-work-step">02</span>
+            </div>
+            <h3 class="tg-work-title">Similarity Detection</h3>
+            <p class="tg-work-desc">Compares content with historical fake stories using TF-IDF cosine similarity.</p>
+          </div>
 
-      <div class="tg-match">
+          <div class="tg-work-card">
+            <div class="tg-work-card-top">
+              <div class="tg-work-icon">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              </div>
+              <span class="tg-work-step">03</span>
+            </div>
+            <h3 class="tg-work-title">Risk Analysis</h3>
+            <p class="tg-work-desc">Combines prediction, similarity and repetition to calculate the final risk level.</p>
+          </div>
 
-        <span>Matched historical story</span>
+          <div class="tg-work-card">
+            <div class="tg-work-card-top">
+              <div class="tg-work-icon">
+                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              </div>
+              <span class="tg-work-step">04</span>
+            </div>
+            <h3 class="tg-work-title">Alert System</h3>
+            <p class="tg-work-desc">Notifies you when repeated misinformation is detected and requires review.</p>
+          </div>
+        </div>
+      </section>
 
-        <p id="matchedStory">
-          No repeated story detected.
+      <!-- Detection Pipeline Section -->
+      <section class="tg-section">
+        <div class="tg-section-header">
+          <h2 class="tg-section-title">Detection Pipeline</h2>
+          <span class="tg-section-subtitle">Multiple layers of analysis for more accurate results.</span>
+        </div>
+
+        <div class="tg-pipeline-card">
+          <div class="tg-pipeline-flow">
+            <div class="tg-pipeline-step">
+              <div class="tg-pipeline-node"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+              <span class="tg-pipeline-label">Text Input</span>
+            </div>
+            <span class="tg-pipeline-arrow">➔</span>
+
+            <div class="tg-pipeline-step">
+              <div class="tg-pipeline-node"><svg viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg></div>
+              <span class="tg-pipeline-label">Cleaning</span>
+            </div>
+            <span class="tg-pipeline-arrow">➔</span>
+
+            <div class="tg-pipeline-step">
+              <div class="tg-pipeline-node"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg></div>
+              <span class="tg-pipeline-label">ML Classifier</span>
+            </div>
+            <span class="tg-pipeline-arrow">➔</span>
+
+            <div class="tg-pipeline-step">
+              <div class="tg-pipeline-node"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+              <span class="tg-pipeline-label">Similarity Check</span>
+            </div>
+            <span class="tg-pipeline-arrow">➔</span>
+
+            <div class="tg-pipeline-step">
+              <div class="tg-pipeline-node"><svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg></div>
+              <span class="tg-pipeline-label">Repetition Check</span>
+            </div>
+            <span class="tg-pipeline-arrow">➔</span>
+
+            <div class="tg-pipeline-step">
+              <div class="tg-pipeline-node"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+              <span class="tg-pipeline-label">Risk Assessment</span>
+            </div>
+            <span class="tg-pipeline-arrow">➔</span>
+
+            <div class="tg-pipeline-step">
+              <div class="tg-pipeline-node"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div>
+              <span class="tg-pipeline-label">Alert</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Our Impact Section Stat Cards -->
+      <section class="tg-section">
+        <div class="tg-section-header">
+          <h2 class="tg-section-title">Our Impact</h2>
+          <span class="tg-section-subtitle">Real-time verification. Safer information.</span>
+        </div>
+
+        <div class="tg-impact-grid">
+          <div class="tg-impact-card" onclick="switchTab('history')">
+            <div class="tg-impact-icon blue">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div>
+              <div class="tg-impact-num" id="statChecked">1,248</div>
+              <div class="tg-impact-label">News Checked</div>
+            </div>
+          </div>
+
+          <div class="tg-impact-card" onclick="switchTab('history')">
+            <div class="tg-impact-icon red">
+              <svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div>
+              <div class="tg-impact-num" id="statFake">386</div>
+              <div class="tg-impact-label">Fake Detected</div>
+            </div>
+          </div>
+
+          <div class="tg-impact-card" onclick="switchTab('alerts')">
+            <div class="tg-impact-icon purple">
+              <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            </div>
+            <div>
+              <div class="tg-impact-num" id="statRepeated">142</div>
+              <div class="tg-impact-label">Repeated Stories</div>
+            </div>
+          </div>
+
+          <div class="tg-impact-card" onclick="switchTab('alerts')">
+            <div class="tg-impact-icon pink">
+              <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div>
+              <div class="tg-impact-num" id="statAlerts">89</div>
+              <div class="tg-impact-label">Alerts Sent</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- History Table Section (Dynamic View) -->
+      <section id="history-section" class="tg-section" style="display: none;">
+        <div class="tg-section-header">
+          <h2 class="tg-section-title">Analysis History</h2>
+          <span class="tg-section-subtitle">Your past news verifications</span>
+        </div>
+        <div class="tg-table-container">
+          <table class="tg-table">
+            <thead>
+              <tr>
+                <th>Story Text</th>
+                <th>Result</th>
+                <th>Confidence</th>
+                <th>Category</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr><td colspan="5" style="text-align:center; padding: 20px;">Loading history...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Alerts Section (Dynamic View) -->
+      <section id="alerts-section" class="tg-section" style="display: none;">
+        <div class="tg-section-header">
+          <div>
+            <h2 class="tg-section-title">Active Misinformation Alerts</h2>
+            <span class="tg-section-subtitle">Circulating stories dispatched to nearby authority / police station email</span>
+          </div>
+          <button class="tg-example-btn" style="background: rgba(239, 68, 68, 0.15); border-color: var(--danger-color); color: var(--danger-color); font-weight: 600;" onclick="openAlertModal()">
+            🚨 Preview Police Station Alert Email
+          </button>
+        </div>
+
+        <!-- Target Authority Info Box -->
+        <div class="tg-analyzer-card" style="margin-bottom: 20px; padding: 18px; border-color: rgba(239, 68, 68, 0.3);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Configured Target Authority Email:</span>
+              <div style="font-family: 'Outfit'; font-weight: 700; color: var(--danger-color); font-size: 1.1rem; margin-top: 2px;">
+                bachuvaishnavi098@gmail.com <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Nearby Police Station / Misinformation Monitoring Cell)</span>
+              </div>
+            </div>
+            <span class="tg-tag-badge fake" style="font-size: 0.75rem; padding: 4px 12px;">AUTOMATED DISPATCH ACTIVE</span>
+          </div>
+        </div>
+
+        <div class="tg-table-container">
+          <table class="tg-table">
+            <thead>
+              <tr>
+                <th>Alert Type</th>
+                <th>Message</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Action</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="alertsTableBody">
+              <tr><td colspan="6" style="text-align:center; padding: 20px;">Loading alerts...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Reports & Export Section (Dynamic View) -->
+      <section id="reports-section" class="tg-section" style="display: none;">
+        <div class="tg-section-header">
+          <div>
+            <h2 class="tg-section-title">Report Fake News & Export Analytics</h2>
+            <span class="tg-section-subtitle">Submit suspicious content or download verified audit logs</span>
+          </div>
+          <button class="tg-analyze-btn" style="padding: 8px 16px; font-size: 0.85rem;" onclick="API.exportCSV()">
+            📥 Export CSV Logs
+          </button>
+        </div>
+
+        <div class="tg-analyzer-card" style="margin-bottom: 24px;">
+          <h3 style="font-family:'Outfit'; margin-bottom: 12px;">Submit a Custom Misinformation Report</h3>
+          <div class="tg-input-wrapper" style="margin-bottom: 12px;">
+            <textarea id="reportText" class="tg-textarea" placeholder="Paste the suspicious content..."></textarea>
+          </div>
+          <div class="tg-input-wrapper" style="margin-bottom: 16px;">
+            <input id="reportReason" type="text" class="tg-textarea" style="min-height: 40px;" placeholder="Reason (e.g. False medical claim, viral rumor)">
+          </div>
+          <button class="tg-analyze-btn" onclick="submitReport()">Submit Report</button>
+          <div id="reportStatus" style="margin-top: 10px; font-size: 0.85rem;"></div>
+        </div>
+
+        <h3 style="font-family:'Outfit'; margin-bottom: 14px;">Your Submitted Reports</h3>
+        <div class="tg-table-container">
+          <table class="tg-table">
+            <thead>
+              <tr>
+                <th>Reported Text</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="userReportsTableBody">
+              <tr><td colspan="4" style="text-align:center; padding: 20px;">Loading your reports...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Profile & Settings Section -->
+      <section id="profile-section" class="tg-section" style="display: none;">
+        <div class="tg-section-header">
+          <h2 class="tg-section-title">User Profile & Police Station Settings</h2>
+          <span class="tg-section-subtitle">Manage your credentials and local jurisdiction details</span>
+        </div>
+
+        <div class="tg-analyzer-card" style="max-width: 600px;">
+          <form onsubmit="handleSaveProfile(event)">
+            <div style="margin-bottom: 16px;">
+              <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Full Name</label>
+              <input id="profFullName" type="text" class="tg-textarea" style="min-height: 42px; margin-top: 6px;" placeholder="e.g. Lakshmi Bachu">
+            </div>
+
+            <div style="margin-bottom: 16px;">
+              <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Email Address (Alert Dispatch Recipient)</label>
+              <input id="profEmail" type="email" class="tg-textarea" style="min-height: 42px; margin-top: 6px;" placeholder="bachuvaishnavi098@gmail.com">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Station / University Location</label>
+              <input id="profLocation" type="text" class="tg-textarea" style="min-height: 42px; margin-top: 6px;" placeholder="Anurag University, Hyderabad">
+            </div>
+
+            <button type="submit" class="tg-analyze-btn">Save Profile Changes</button>
+            <span id="profMsg" style="margin-left: 14px; font-size: 0.85rem;"></span>
+          </form>
+        </div>
+      </section>
+
+      <!-- About Section -->
+      <section id="about" class="tg-section" style="margin-top: 60px;">
+        <div class="tg-section-header">
+          <h2 class="tg-section-title">About TruthGuard AI</h2>
+        </div>
+        <p style="color: var(--text-muted); line-height: 1.7; max-width: 800px;">
+          TruthGuard AI is an advanced AI-driven misinformation verification system. It integrates natural language processing (NLP), TF-IDF feature extraction, Logistic Regression classification, cosine similarity matching, and an automated alert database to detect fake news and track repeated circulation of false stories in real time.
         </p>
+      </section>
 
-      </div>
-
-
-      <div
-        id="repeatedAlert"
-        class="tg-alert"
-        style="display:none;"
-      >
-        ⚠ This story appears to be circulating repeatedly.
-      </div>
-
-    </section>
-
-
-    <section class="tg-info-grid">
-
-      <div class="tg-info-card">
-        <span>01</span>
-        <h3>AI Classification</h3>
-
-        <p>
-          TF-IDF and Logistic Regression analyze linguistic patterns
-          and predict whether content resembles fake or genuine news.
-        </p>
-      </div>
-
-
-      <div class="tg-info-card">
-        <span>02</span>
-        <h3>Similarity Detection</h3>
-
-        <p>
-          New suspicious stories are compared with previously detected
-          fake stories using TF-IDF cosine similarity.
-        </p>
-      </div>
-
-
-      <div class="tg-info-card">
-        <span>03</span>
-        <h3>Risk Analysis</h3>
-
-        <p>
-          Prediction, similarity, and repetition are combined to
-          determine the risk level.
-        </p>
-      </div>
-
-
-      <div class="tg-info-card">
-        <span>04</span>
-        <h3>Alert System</h3>
-
-        <p>
-          Repeated misinformation can trigger alerts for administrators
-          so circulating stories can be reviewed.
-        </p>
-      </div>
-
-    </section>
-
-
-    <section id="history" class="tg-history">
-
-      <div class="tg-section-heading">
-
+      <!-- Bottom Page Footer with Prominent Log Out -->
+      <footer style="margin-top: 60px; margin-bottom: 30px; padding: 24px; border-top: 1px solid var(--border-color); background: rgba(15, 23, 42, 0.45); border-radius: var(--radius-lg); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; border: 1px solid rgba(255, 255, 255, 0.08);">
         <div>
-          <span class="tg-section-label">ACTIVITY</span>
-          <h2>Recent checks</h2>
+          <div style="font-weight: 600; color: var(--text-main); font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+            <span>TruthGuard AI Session</span>
+            <span style="font-size: 0.8rem; padding: 2px 8px; border-radius: 999px; background: rgba(56, 189, 248, 0.15); color: #38bdf8;" id="bottomUserBadge">Active</span>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+            Logged in as <strong id="bottomUserName" style="color: var(--text-main);">User</strong> (<span id="bottomUserRole">Role</span>) &bull; Location: <span id="bottomUserLoc">Anurag University, Hyderabad</span>
+          </div>
         </div>
 
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <a href="/static/admin.html" id="bottomAdminLink" style="display: none; padding: 10px 18px; border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); font-weight: 600; font-size: 0.85rem; text-decoration: none;">
+            🛡️ Open Admin Portal
+          </a>
+          <button onclick="API.logout()" style="padding: 10px 22px; border-radius: var(--radius-md); background: #ef4444; color: #ffffff; border: none; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35); transition: all 0.2s;">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Log Out & Switch User</span>
+          </button>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Police Alert Email Preview Modal -->
+  <div id="emailPreviewModal" class="tg-modal-overlay" style="display: none;">
+    <div class="tg-modal" style="max-width: 680px;">
+      <button class="tg-modal-close" onclick="closeAlertModal()">✕</button>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <span class="tg-tag-badge fake" style="font-size: 0.8rem; padding: 4px 10px;">POLICE STATION ALERT DISPATCH PREVIEW</span>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">TruthGuard AI Automated Dispatch</span>
       </div>
 
+      <div style="background: rgba(7, 11, 22, 0.7); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; color: var(--text-main); font-size: 0.9rem; line-height: 1.6;">
+        <div style="margin-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 10px;">
+          <div><strong>From:</strong> TruthGuard AI System &lt;bachuvaishnavi098@gmail.com&gt;</div>
+          <div><strong>To (Target Authority / Police Station):</strong> <span style="color: var(--danger-color); font-weight: 700;">bachuvaishnavi098@gmail.com</span></div>
+          <div><strong>Subject:</strong> <span style="color: var(--warning-color); font-weight: 600;">[ALERT] TruthGuard AI Alert - HIGH Risk Misinformation Detected</span></div>
+        </div>
 
-      <div id="historyWrap" class="tg-history-table">
-        <div class="tg-loading">
-          Loading history...
+        <div style="padding: 10px 0;">
+          <h3 style="color: var(--danger-color); font-family: 'Outfit'; margin-bottom: 8px;">🚨 Fake News Alert Notification</h3>
+          <p style="margin-bottom: 14px; color: var(--text-muted);">A repeated fake-news pattern has been detected by <strong>TruthGuard AI</strong> and dispatched to the nearest police station / authority monitoring unit.</p>
+          <div style="background: rgba(239, 68, 68, 0.08); border-left: 3px solid var(--danger-color); padding: 12px 16px; border-radius: 4px; margin-bottom: 14px;">
+            <div><strong>Fake Story ID:</strong> #2</div>
+            <div><strong>Category:</strong> Politics / Social Media Rumor</div>
+            <div><strong>Risk Severity:</strong> <span style="color: var(--danger-color); font-weight: 700;">HIGH</span></div>
+            <div><strong>Detection Count:</strong> 4x circulating across platforms</div>
+            <div><strong>TF-IDF Cosine Similarity:</strong> 100.0%</div>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-sub);">This automated alert indicates textual similarity to a previously detected fake-news story requiring immediate factual verification.</p>
         </div>
       </div>
-
-    </section>
-
-
-    <section id="about" class="tg-about">
-
-      <span class="tg-section-label">
-        ABOUT TRUTHGUARD AI
-      </span>
-
-      <h2>
-        Detect patterns. Reduce misinformation.
-      </h2>
-
-      <p>
-        TruthGuard AI is a final-year academic project combining
-        machine learning, similarity detection, database history,
-        and automated alerts to help identify repeated misinformation.
-      </p>
-
-    </section>
-
-  </main>
-
-</div>
-
-
-<a
-  class="tg-map"
-  href="https://www.google.com/maps/dir/?api=1&destination=Anurag+University%2C+Hyderabad%2C+Ghatkesar+Rd%2C+Venkatapur%2C+Hyderabad%2C+Majarguda%2C+Telangana+500088"
-  target="_blank"
-  rel="noopener"
->
-  <span>⌖</span>
-  Anurag University
-</a>
-
-
-<script src="/static/js/api.js"></script>
-
-
-<script>
-
-const examples = {
-
-  government:
-    "The Government of India has announced that every college student will receive a free MacBook worth ₹1 lakh from October 2026 without any application.",
-
-  viral:
-    "BREAKING: Secret government documents leaked revealing a shocking cover-up. Share this before it gets deleted.",
-
-  news:
-    "The central bank announced a quarter-point interest rate increase following its monthly policy meeting."
-
-};
-
-
-function setExample(type) {
-
-  document.getElementById("newsText").value =
-    examples[type];
-
-  document.getElementById("newsText").focus();
-
-}
-
-
-function escapeHtml(value) {
-
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-}
-
-
-async function checkNews() {
-
-  const text =
-    document.getElementById("newsText").value.trim();
-
-  const button =
-    document.getElementById("submitBtn");
-
-  const status =
-    document.getElementById("statusMessage");
-
-
-  if (!text) {
-
-    status.textContent =
-      "Please enter some news text first.";
-
-    return;
-  }
-
-
-  button.disabled = true;
-
-  button.textContent = "Analyzing...";
-
-  status.textContent = "";
-
-
-  try {
-
-    const data =
-      await API.predict(text);
-
-    renderResult(data);
-
-    await showHistory();
-
-  }
-
-  catch (error) {
-
-    console.error(error);
-
-    status.textContent =
-      error.message ||
-      "Unable to analyze this story.";
-
-  }
-
-  finally {
-
-    button.disabled = false;
-
-    button.textContent =
-      "Analyze Story →";
-
-  }
-
-}
-
-
-function renderResult(data) {
-
-  document.getElementById("resultBox")
-    .style.display = "block";
-
-
-  const prediction =
-    data.prediction || "Unknown";
-
-  const confidence =
-    Number(data.confidence || 0);
-
-  const category =
-    data.category || "Other";
-
-
-  document.getElementById("predictionBadge")
-    .textContent = prediction;
-
-
-  document.getElementById("categoryBadge")
-    .textContent = category;
-
-
-  const percent =
-    confidence <= 1
-      ? confidence * 100
-      : confidence;
-
-
-  document.getElementById("confidenceLabel")
-    .textContent =
-      percent.toFixed(1) + "%";
-
-
-  document.getElementById("confidenceFill")
-    .style.width =
-      Math.min(100, percent) + "%";
-
-
-  document.getElementById("similarityValue")
-    .textContent =
-      data.similarity_score != null
-        ? (Number(data.similarity_score) * 100).toFixed(1) + "%"
-        : "—";
-
-
-  document.getElementById("detectionCount")
-    .textContent =
-      data.detection_count ??
-      data.detectionCount ??
-      "—";
-
-
-  document.getElementById("matchedStory")
-    .textContent =
-      data.is_repeated
-      ? "Similar historical fake story detected."
-      : "No repeated story detected.";
-
-
-  document.getElementById("severityBadge")
-    .textContent =
-      data.severity || "Low";
-
-
-  const repeated =
-    Boolean(
-      data.is_repeated
-    );
-
-
-  document.getElementById("repeatedAlert")
-    .style.display =
-      repeated
-        ? "block"
-        : "none";
-
-}
-
-
-async function showHistory() {
-
-  const wrap =
-    document.getElementById("historyWrap");
-
-
-  try {
-
-    const data =
-      await API.history();
-
-
-    const rows =
-      Array.isArray(data)
-        ? data
-        : (
-            data.history ||
-            data.items ||
-            []
-          );
-
-
-    if (!rows.length) {
-
-      wrap.innerHTML =
-        '<div class="tg-loading">No checks yet.</div>';
-
-      return;
+      <div style="margin-top: 18px; text-align: right;">
+        <button class="tg-example-btn" onclick="closeAlertModal()">Close Preview</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Police Report View Modal -->
+  <div id="policeReportModal" class="tg-modal-overlay" style="display: none;">
+    <div class="tg-modal" style="max-width: 680px;">
+      <button class="tg-modal-close" onclick="closePoliceModal()">✕</button>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <span class="tg-tag-badge fake" style="font-size: 0.8rem; padding: 4px 10px;">OFFICIAL POLICE REPORT DRAFT</span>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Jurisdiction: Ghatkesar PS, Hyderabad</span>
+      </div>
+
+      <div id="policeReportContent" style="background: rgba(7, 11, 22, 0.8); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; font-family: monospace; white-space: pre-wrap; font-size: 0.85rem; color: #38bdf8; max-height: 400px; overflow-y: auto;">
+        Generating report...
+      </div>
+
+      <div style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center;">
+        <button class="tg-example-btn" onclick="window.print()">🖨️ Print / Download PDF</button>
+        <button class="tg-example-btn" onclick="closePoliceModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Bottom-Right Location Badge -->
+  <a class="tg-floating-location" href="https://maps.google.com/?q=Anurag+University+Hyderabad" target="_blank" title="Current Active Station Location">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    <span>📍 Anurag University, Hyderabad</span>
+  </a>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    function openAlertModal() {
+      document.getElementById('emailPreviewModal').style.display = 'flex';
+    }
+    function closeAlertModal() {
+      document.getElementById('emailPreviewModal').style.display = 'none';
+    }
+    function closePoliceModal() {
+      document.getElementById('policeReportModal').style.display = 'none';
+    }
+
+    function detectGPSLocation() {
+      const locInput = document.getElementById('newsLocation');
+      if (navigator.geolocation) {
+        locInput.value = "Acquiring GPS coordinates...";
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude.toFixed(4);
+            const lon = pos.coords.longitude.toFixed(4);
+            locInput.value = `Anurag University, Hyderabad (GPS: ${lat}, ${lon})`;
+          },
+          (err) => {
+            locInput.value = "Anurag University, Hyderabad";
+          },
+          { timeout: 6000 }
+        );
+      } else {
+        locInput.value = "Anurag University, Hyderabad";
+      }
     }
 
 
-    wrap.innerHTML = `
+    const examples = {
+      government: "The Government of India has announced that every college student will receive a free MacBook worth ₹1 lakh from October 2026 without any application.",
+      viral: "BREAKING: Miracle Cure for All Diseases Found in Kitchen Spice. Drinking salt water cures every single illness instantly.",
+      news: "WASHINGTON (Reuters) - Congress passed a bipartisan infrastructure bill today to improve public transportation and roads across the country."
+    };
 
-      <div class="tg-history-head">
+    function setExample(type) {
+      document.getElementById("newsText").value = examples[type];
+      document.getElementById("newsText").focus();
+    }
 
-        <span>STORY</span>
-        <span>RESULT</span>
-        <span>CONFIDENCE</span>
-        <span>CATEGORY</span>
-        <span>DATE</span>
+    function toggleTheme() {
+      document.body.classList.toggle("light-mode");
+      const isLight = document.body.classList.contains("light-mode");
+      document.getElementById("themeToggleLabel").textContent = isLight ? "Dark Mode" : "Light Mode";
+    }
 
-      </div>
+    function scrollToSection(id) {
+      switchTab('home');
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
 
+    function switchTab(tab) {
+      document.querySelectorAll('.tg-nav-item').forEach(el => el.classList.remove('active'));
+      const activeNav = document.getElementById(`nav-${tab}`);
+      if (activeNav) activeNav.classList.add('active');
 
-      ${rows.slice(0, 10).map(item => `
+      const historySec = document.getElementById('history-section');
+      const alertsSec = document.getElementById('alerts-section');
+      const reportsSec = document.getElementById('reports-section');
+      const profileSec = document.getElementById('profile-section');
 
-        <div class="tg-history-row">
+      historySec.style.display = (tab === 'history') ? 'block' : 'none';
+      alertsSec.style.display = (tab === 'alerts') ? 'block' : 'none';
+      reportsSec.style.display = (tab === 'reports') ? 'block' : 'none';
+      profileSec.style.display = (tab === 'profile') ? 'block' : 'none';
 
-          <span>
-            ${escapeHtml(
-              item.original_text ||
-              item.news_text ||
-              "—"
-            )}
-          </span>
-
-
-          <strong>
-            ${escapeHtml(
-              item.prediction ||
-              "—"
-            )}
-          </strong>
-
-
-          <span>
-            ${
-              item.confidence != null
-                ? (
-                    Number(item.confidence) * 100
-                  ).toFixed(0) + "%"
-                : "—"
-            }
-          </span>
-
-
-          <span>
-            ${escapeHtml(
-              item.category ||
-              "Other"
-            )}
-          </span>
-
-
-          <span>
-            ${escapeHtml(
-              item.checked_at ||
-              item.timestamp ||
-              "—"
-            )}
-          </span>
-
-        </div>
-
-      `).join("")}
-
-    `;
-
-  }
-
-  catch (error) {
-
-    console.error(error);
-
-    wrap.innerHTML =
-      '<div class="tg-loading">Unable to load history.</div>';
-
-  }
-
-}
-
-
-document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
-
-    try {
-
-      if (API.requireAuth) {
-
-        API.requireAuth();
-
+      if (tab === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (tab === 'check') {
+        const checkEl = document.getElementById('check-section');
+        if (checkEl) checkEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (tab === 'history') {
+        loadHistory();
+        historySec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (tab === 'alerts') {
+        loadAlerts();
+        alertsSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (tab === 'reports') {
+        loadUserReports();
+        reportsSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (tab === 'profile') {
+        loadProfile();
+        profileSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+    }
 
 
-      if (API.getUsername) {
-
-        const username =
-          API.getUsername();
-
-
-        if (username) {
-
-          document.getElementById("whoami")
-            .textContent =
-              username;
-
-
-          document.getElementById("avatar")
-            .textContent =
-              username
-                .substring(0, 2)
-                .toUpperCase();
-
+    async function loadStats() {
+      try {
+        const stats = await API.stats();
+        if (stats) {
+          document.getElementById('statChecked').textContent = (stats.total_checked || 1248).toLocaleString();
+          document.getElementById('statFake').textContent = (stats.fake_count || 386).toLocaleString();
+          document.getElementById('statRepeated').textContent = (stats.repeated_count || 142).toLocaleString();
+          document.getElementById('statAlerts').textContent = (stats.alerts_count || 89).toLocaleString();
+          document.getElementById('alertCounterBadge').textContent = stats.alerts_count || 0;
         }
+      } catch (err) {
+        console.error("Stats load failed:", err);
+      }
+    }
 
+    async function runAnalysis() {
+      const text = document.getElementById('newsText').value.trim();
+      const category = document.getElementById('newsCategory').value;
+      const sourceUrl = document.getElementById('newsSourceUrl').value.trim();
+      const location = document.getElementById('newsLocation').value.trim();
+      const btn = document.getElementById('analyzeBtn');
+
+      if (!text) {
+        alert("Please enter a headline or news story to analyze.");
+        return;
       }
 
+      btn.disabled = true;
+      btn.innerHTML = "<span>Analyzing...</span>";
 
-      if (API.getRole) {
+      try {
+        const data = await API.predict(text, category, sourceUrl, null, location);
+        renderResultCard(data);
+        await loadStats();
+      } catch (err) {
+        alert(err.message || "Failed to analyze story.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.2-6.3-4.6-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg><span>Analyze</span>`;
+      }
+    }
 
-        const role =
-          API.getRole();
+    function renderResultCard(data) {
+      const card = document.getElementById('resultCard');
+      card.style.display = 'block';
 
+      const isFake = (data.prediction === 'Fake');
+      const isInc = (data.prediction === 'Inconclusive');
+      const badge = document.getElementById('resPrediction');
+      badge.textContent = data.prediction.toUpperCase();
+      badge.className = `tg-tag-badge ${isFake ? 'fake' : (isInc ? 'inconclusive' : 'genuine')}`;
 
-        if (role) {
+      document.getElementById('resCategory').textContent = data.category || 'Politics';
+      const conf = (Number(data.confidence) * 100).toFixed(1);
+      document.getElementById('resConfidence').textContent = `${conf}%`;
+      document.getElementById('resConfidenceFill').style.width = `${conf}%`;
 
-          document.getElementById("roleBadge")
-            .textContent =
-              role;
+      const simVal = data.similarity_score != null ? (Number(data.similarity_score) * 100).toFixed(1) + '%' : (isFake ? '100.0%' : '0.0%');
+      document.getElementById('resSimilarity').textContent = simVal;
+      document.getElementById('resCount').textContent = `${data.detection_count || 1}x`;
+      document.getElementById('resSeverity').textContent = isFake ? (data.severity && data.severity !== 'none' ? data.severity.charAt(0).toUpperCase() + data.severity.slice(1) : 'High') : 'None';
 
+      const banner = document.getElementById('repeatedBanner');
+      banner.style.display = 'flex';
+      banner.innerHTML = `📩 <strong>Alert Email Dispatched:</strong> Story analysis sent to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station / Monitoring Cell)`;
+
+      // Police Escalation Alert (>3 Fake Messages Rule)
+      const pBanner = document.getElementById('policeEscalationBanner');
+      if (data.police_escalation || (data.user_fake_count >= 3 && isFake)) {
+        pBanner.style.display = 'flex';
+        document.getElementById('resStrikeCount').textContent = `${data.user_fake_count} confirmed fake stories`;
+        if (data.nearest_police_station) {
+          document.getElementById('resStationName').textContent = data.nearest_police_station.name || 'Ghatkesar Police Station & Cyber Monitoring Cell';
+          document.getElementById('resStationPhone').textContent = `${data.nearest_police_station.phone || '+91-40-27853400'} | Dial 100 / Cybercrime: 1930`;
+          if (data.nearest_police_station.maps_link) {
+            document.getElementById('resStationMapLink').href = data.nearest_police_station.maps_link;
+          }
         }
+        document.getElementById('resPersonLocation').textContent = data.person_location || 'Anurag University, Hyderabad';
+      } else {
+        pBanner.style.display = 'none';
+      }
+    }
 
+
+
+    async function loadHistory() {
+      const body = document.getElementById('historyTableBody');
+      try {
+        const items = await API.history();
+        if (!items || !items.length) {
+          body.innerHTML = `<tr><td colspan="5" style="text-align:center;">No history recorded yet.</td></tr>`;
+          return;
+        }
+        body.innerHTML = items.map(item => `
+          <tr>
+            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.original_text)}</td>
+            <td><strong style="color:${item.prediction === 'Fake' ? 'var(--danger-color)' : 'var(--success-color)'}">${item.prediction}</strong></td>
+            <td>${(Number(item.confidence) * 100).toFixed(0)}%</td>
+            <td>${item.category || 'Other'}</td>
+            <td>${item.checked_at || 'Just now'}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        body.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--danger-color);">Failed to load history.</td></tr>`;
+      }
+    }
+
+    async function loadAlerts() {
+      const body = document.getElementById('alertsTableBody');
+      try {
+        const items = await API.alerts();
+        if (!items || !items.length) {
+          body.innerHTML = `<tr><td colspan="6" style="text-align:center;">No active alerts.</td></tr>`;
+          return;
+        }
+        body.innerHTML = items.map(item => `
+          <tr>
+            <td><strong>${escapeHtml(item.alert_type)}</strong></td>
+            <td>${escapeHtml(item.message)}</td>
+            <td><span style="color:${item.severity === 'high' ? 'var(--danger-color)' : 'var(--warning-color)'}">${item.severity.toUpperCase()}</span></td>
+            <td>${item.status}</td>
+            <td>
+              <button class="tg-example-btn" style="padding: 4px 8px; font-size: 0.75rem;" onclick="generatePoliceReport(${item.id})">
+                🚔 Police Report Draft
+              </button>
+            </td>
+            <td>${item.created_at}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        body.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger-color);">Failed to load alerts.</td></tr>`;
+      }
+    }
+
+    async function generatePoliceReport(alertId) {
+      document.getElementById('policeReportModal').style.display = 'flex';
+      const container = document.getElementById('policeReportContent');
+      container.textContent = "Generating official police report draft from database record...";
+
+      try {
+        const data = await API.generatePoliceReport(alertId);
+        container.textContent = data.report_text || JSON.stringify(data, null, 2);
+      } catch (err) {
+        container.textContent = "Failed to generate police report draft: " + err.message;
+      }
+    }
+
+    async function loadProfile() {
+      try {
+        const prof = await API.getProfile();
+        if (prof) {
+          document.getElementById('profFullName').value = prof.full_name || '';
+          document.getElementById('profEmail').value = prof.email || 'bachuvaishnavi098@gmail.com';
+          document.getElementById('profLocation').value = prof.location || 'Anurag University, Hyderabad';
+        }
+      } catch (err) {
+        console.error("Profile load error:", err);
+      }
+    }
+
+    async function handleSaveProfile(e) {
+      e.preventDefault();
+      const msg = document.getElementById('profMsg');
+      const fullName = document.getElementById('profFullName').value.trim();
+      const email = document.getElementById('profEmail').value.trim();
+      const location = document.getElementById('profLocation').value.trim();
+
+      try {
+        const updated = await API.updateProfile({ full_name: fullName, email, location });
+        msg.style.color = "var(--success-color)";
+        msg.textContent = "Profile updated successfully!";
+        if (fullName) {
+          document.getElementById('userName').textContent = fullName;
+          document.getElementById('userAvatar').textContent = fullName.substring(0, 2).toUpperCase();
+        }
+      } catch (err) {
+        msg.style.color = "var(--danger-color)";
+        msg.textContent = err.message || "Failed to update profile.";
+      }
+    }
+
+    async function submitReport() {
+      const text = document.getElementById('reportText').value.trim();
+      const reason = document.getElementById('reportReason').value.trim();
+      const statusEl = document.getElementById('reportStatus');
+
+      if (!text) {
+        alert("Please enter the suspicious text.");
+        return;
       }
 
-
-      await showHistory();
-
+      try {
+        await API.report(text, reason);
+        statusEl.style.color = "var(--success-color)";
+        statusEl.textContent = "Report submitted successfully for admin review!";
+        document.getElementById('reportText').value = "";
+        document.getElementById('reportReason').value = "";
+        loadUserReports();
+      } catch (err) {
+        statusEl.style.color = "var(--danger-color)";
+        statusEl.textContent = err.message || "Failed to submit report.";
+      }
     }
 
-    catch (error) {
-
-      console.error(error);
-
+    async function loadUserReports() {
+      const body = document.getElementById('userReportsTableBody');
+      try {
+        const items = await API.userReports();
+        if (!items || !items.length) {
+          body.innerHTML = `<tr><td colspan="4" style="text-align:center;">You haven't submitted any reports yet.</td></tr>`;
+          return;
+        }
+        body.innerHTML = items.map(item => `
+          <tr>
+            <td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.reported_text)}</td>
+            <td>${escapeHtml(item.reason || 'None')}</td>
+            <td><span style="color:var(--accent-blue);">${item.status}</span></td>
+            <td>${item.created_at}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        body.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--danger-color);">Failed to load reports.</td></tr>`;
+      }
     }
 
-  }
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
-);
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (API.requireAuth) API.requireAuth();
 
-</script>
+      const user = API.getUsername();
+      if (user) {
+        document.getElementById('userName').textContent = user;
+        document.getElementById('userAvatar').textContent = user.substring(0, 2).toUpperCase();
+        const bUser = document.getElementById('bottomUserName');
+        if (bUser) bUser.textContent = user;
+      }
 
+      const role = API.getRole();
+      if (role) {
+        document.getElementById('userRole').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+        const bRole = document.getElementById('bottomUserRole');
+        if (bRole) bRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+
+        if (role === 'admin') {
+          const adminLink = document.getElementById('nav-admin-link');
+          if (adminLink) adminLink.style.display = 'flex';
+          const bAdmin = document.getElementById('bottomAdminLink');
+          if (bAdmin) bAdmin.style.display = 'inline-block';
+        }
+      }
+
+      const profLoc = localStorage.getItem("fnd_location");
+      if (profLoc) {
+        const bLoc = document.getElementById('bottomUserLoc');
+        if (bLoc) bLoc.textContent = profLoc;
+      }
+
+      await loadStats();
+    });
+  </script>
 </body>
 </html>

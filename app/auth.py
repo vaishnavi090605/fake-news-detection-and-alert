@@ -20,7 +20,7 @@ SECRET_KEY = os.environ.get("FAKE_NEWS_SECRET_KEY", "demo-secret-key-change-this
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours, convenient for a demo
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # Set this to register as admin: POST /register with "admin_code" matching this.
