@@ -389,26 +389,30 @@ body {
 /* Hero 3D Shield Graphic Background Decor */
 .tg-hero-graphic {
   position: absolute;
-  right: 20px;
-  top: 10px;
-  width: 160px;
-  height: 160px;
-  opacity: 0.85;
-  filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.4));
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 140px;
+  height: 140px;
+  opacity: 0.12;
+  filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.3));
   pointer-events: none;
+  z-index: 0;
 }
 
 .tg-hero-quote {
-  position: absolute;
-  left: 10px;
-  top: 60px;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-style: italic;
-  color: var(--text-sub);
-  max-width: 140px;
-  text-align: left;
-  border-left: 2px solid var(--accent-blue);
-  padding-left: 10px;
+  color: var(--accent-blue);
+  text-align: center;
+  margin-bottom: 12px;
+  background: rgba(56, 189, 248, 0.08);
+  padding: 6px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: inline-block;
+  position: relative;
+  z-index: 1;
 }
 
 /* News Analyzer Glass Container */
@@ -601,33 +605,9 @@ body {
   box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
 }
 
-/* Bottom Right Floating Location Badge */
+/* Floating location badge removed from fixed overlay to prevent UI overlap */
 .tg-floating-location {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 99;
-  background: rgba(14, 22, 40, 0.88);
-  border: 1px solid var(--border-glow);
-  padding: 10px 18px;
-  border-radius: 30px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.83rem;
-  font-weight: 600;
-  color: var(--text-main);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), 0 0 15px rgba(56, 189, 248, 0.2);
-  text-decoration: none;
-  transition: var(--transition);
-}
-
-.tg-floating-location:hover {
-  transform: translateY(-3px);
-  border-color: var(--accent-blue);
-  color: var(--accent-blue);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), var(--accent-glow);
+  display: none !important;
 }
 
 .tg-floating-location svg {
@@ -1014,8 +994,28 @@ body {
   color: var(--text-main);
 }
 
-/* Mobile Phone Responsiveness (All Smartphones) */
-@media (max-width: 768px) {
+/* Tablet & Medium Laptop Screens (769px to 1080px) */
+@media (max-width: 1080px) {
+  .tg-sidebar {
+    width: 220px !important;
+    padding: 16px 12px !important;
+  }
+  .tg-main {
+    padding: 24px 20px !important;
+    max-width: 100% !important;
+  }
+  .tg-works-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+  .tg-impact-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+}
+
+/* Tablets and Mobile Phones (Max-width: 860px) */
+@media (max-width: 860px) {
   .tg-shell {
     flex-direction: column !important;
   }
@@ -1023,6 +1023,7 @@ body {
     width: 100% !important;
     height: auto !important;
     position: relative !important;
+    top: auto !important;
     padding: 16px !important;
     border-right: none !important;
     border-bottom: 1px solid var(--border-color) !important;
@@ -1031,12 +1032,12 @@ body {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: wrap !important;
-    gap: 6px !important;
-    margin-top: 12px !important;
+    gap: 8px !important;
+    margin-top: 14px !important;
   }
   .tg-nav-item {
-    padding: 8px 12px !important;
-    font-size: 0.82rem !important;
+    padding: 8px 14px !important;
+    font-size: 0.85rem !important;
   }
   .tg-sidebar-bottom {
     margin-top: 14px !important;
@@ -1050,40 +1051,55 @@ body {
     max-width: 100% !important;
     overflow-x: hidden !important;
   }
-  .tg-hero-quote {
-    display: none !important;
-  }
   .tg-hero-title {
-    font-size: 1.8rem !important;
+    font-size: 2.2rem !important;
   }
   .tg-stat-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    gap: 12px !important;
   }
   .tg-table-container {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
   }
-  .tg-floating-location {
-    bottom: 10px !important;
-    right: 10px !important;
-    font-size: 0.72rem !important;
-    padding: 6px 10px !important;
+  .tg-table {
+    min-width: 600px;
   }
   .tg-analyzer-card {
-    padding: 16px !important;
+    padding: 18px !important;
   }
   .tg-modal {
-    padding: 16px !important;
+    padding: 18px !important;
     max-width: 95vw !important;
   }
 }
 
-@media (max-width: 480px) {
+/* Small Smartphone Screens (Max-width: 520px) */
+@media (max-width: 520px) {
+  .tg-hero-title {
+    font-size: 1.75rem !important;
+  }
+  .tg-works-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .tg-impact-grid {
+    grid-template-columns: 1fr !important;
+  }
   .tg-stat-grid {
     grid-template-columns: 1fr !important;
   }
   .tg-nav-item {
     width: 48% !important;
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 8px !important;
+  }
+  .tg-analyzer-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .tg-analyze-btn {
+    width: 100% !important;
+    justify-content: center !important;
   }
 }

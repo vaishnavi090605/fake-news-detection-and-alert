@@ -118,8 +118,13 @@
     <!-- Main Content Body -->
     <main class="tg-main">
 
-      <!-- Top Header & Theme Switch & Quick Log Out -->
-      <header class="tg-header" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
+      <!-- Top Header & Station Badge & Theme Switch & Quick Log Out -->
+      <header class="tg-header" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+        <a href="https://maps.google.com/?q=Anurag+University+Hyderabad" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; font-size: 0.8rem; font-weight: 600; text-decoration: none;" title="Current Station Location">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>📍 Anurag University, Hyderabad</span>
+        </a>
+
         <button class="tg-theme-toggle" onclick="toggleTheme()" id="themeToggleBtn">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           <span id="themeToggleLabel">Light Mode</span>
@@ -678,14 +683,7 @@
     </div>
   </div>
 
-  <!-- Floating Bottom-Right Location Badge -->
-  <a class="tg-floating-location" href="https://maps.google.com/?q=Anurag+University+Hyderabad" target="_blank" title="Current Active Station Location">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-      <circle cx="12" cy="10" r="3"/>
-    </svg>
-    <span>📍 Anurag University, Hyderabad</span>
-  </a>
+
 
   <script src="/static/js/api.js"></script>
   <script>

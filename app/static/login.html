@@ -76,6 +76,7 @@
       font-size: 0.95rem;
       outline: none;
       transition: var(--transition);
+      box-sizing: border-box;
     }
     .field input:focus {
       border-color: var(--accent-blue);
@@ -86,6 +87,14 @@
       font-size: 0.85rem;
       margin-top: 12px;
       text-align: center;
+    }
+    @media (max-width: 480px) {
+      body {
+        padding: 12px;
+      }
+      .auth-container {
+        padding: 24px 16px;
+      }
     }
   </style>
 </head>
