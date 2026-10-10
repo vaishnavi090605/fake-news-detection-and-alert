@@ -697,24 +697,61 @@
       document.getElementById('policeReportModal').style.display = 'none';
     }
 
-    function detectGPSLocation() {
+    async function detectGPSLocation() {
       const locInput = document.getElementById('newsLocation');
-      if (navigator.geolocation) {
-        locInput.value = "Acquiring GPS coordinates...";
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const lat = pos.coords.latitude.toFixed(4);
-            const lon = pos.coords.longitude.toFixed(4);
-            locInput.value = `Anurag University, Hyderabad (GPS: ${lat}, ${lon})`;
-          },
-          (err) => {
-            locInput.value = "Anurag University, Hyderabad";
-          },
-          { timeout: 6000 }
-        );
-      } else {
-        locInput.value = "Anurag University, Hyderabad";
+      if (!navigator.geolocation) {
+        locInput.value = "Anurag University, Hyderabad (GPS: 17.4435, 78.6562)";
+        return;
       }
+
+      locInput.value = "🛰️ Acquiring live device GPS coordinates...";
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude.toFixed(4);
+          const lon = pos.coords.longitude.toFixed(4);
+          const accuracy = Math.round(pos.coords.accuracy);
+
+          // Real live reverse-geocoding via OpenStreetMap Nominatim
+          try {
+            locInput.value = `📍 Resolving address for (${lat}, ${lon})...`;
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`, {
+              headers: { 'Accept': 'application/json' }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const addr = data.address || {};
+              const place = addr.suburb || addr.neighbourhood || addr.road || addr.village || addr.hamlet || '';
+              const city = addr.city || addr.town || addr.county || addr.state_district || 'Hyderabad';
+              const state = addr.state || 'Telangana';
+              const postcode = addr.postcode ? ` - ${addr.postcode}` : '';
+
+              const formattedLocation = place 
+                ? `${place}, ${city}, ${state}${postcode} (GPS: ${lat}, ${lon})`
+                : `${city}, ${state} (GPS: ${lat}, ${lon})`;
+
+              locInput.value = formattedLocation;
+              localStorage.setItem("fnd_location", formattedLocation);
+              const bLoc = document.getElementById('bottomUserLoc');
+              if (bLoc) bLoc.textContent = formattedLocation;
+              return;
+            }
+          } catch (err) {
+            console.warn("Reverse geocode fallback:", err);
+          }
+
+          // Fallback if network lookup blocked: coordinates + accuracy
+          const coordOnly = `Live Location (GPS: ${lat}, ${lon}, ±${accuracy}m)`;
+          locInput.value = coordOnly;
+          localStorage.setItem("fnd_location", coordOnly);
+          const bLoc = document.getElementById('bottomUserLoc');
+          if (bLoc) bLoc.textContent = coordOnly;
+        },
+        (err) => {
+          console.warn("GPS error:", err);
+          locInput.value = "Anurag University, Hyderabad (GPS: 17.4435, 78.6562)";
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
     }
 
 
@@ -1036,6 +1073,8 @@
       if (profLoc) {
         const bLoc = document.getElementById('bottomUserLoc');
         if (bLoc) bLoc.textContent = profLoc;
+        const nLoc = document.getElementById('newsLocation');
+        if (nLoc && !nLoc.value) nLoc.value = profLoc;
       }
 
       await loadStats();
