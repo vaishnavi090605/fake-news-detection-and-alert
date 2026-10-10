@@ -150,7 +150,15 @@ def send_police_escalation_alert(
     station_phone = nearest_station.get("phone", "+91-40-27853400 / 100")
     sho = nearest_station.get("sho_officer", "SHO, Ghatkesar PS")
 
-    subject = f"🚨 [POLICE ESCALATION] REPEATED FAKE NEWS SPREAD (>3 STRIKES) - Location: {person_location} - Assigned: {station_name}"
+    is_escalation = (fake_count >= 3)
+    if is_escalation:
+        subject = f"🚨 [CRITICAL POLICE ESCALATION] Fake News Spread Exceeded Limit ({fake_count} Strikes) - Location: {person_location} - Assigned: {station_name}"
+        badge_text = f"THRESHOLD EXCEEDED ({fake_count} STRIKES)"
+        intro_text = f"An automated system monitor has flagged a user who has submitted or attempted to distribute <strong>confirmed fake messages {fake_count} times</strong> (exceeding the safety limit of 3 strikes)."
+    else:
+        subject = f"🚔 [POLICE DISPATCH ALERT] Fake News Detected (Strike #{fake_count}) - Location: {person_location} - Assigned: {station_name}"
+        badge_text = f"POLICE MONITORING ACTIVE (STRIKE #{fake_count} OF 3)"
+        intro_text = f"An automated system monitor has intercepted a confirmed fake news submission (<strong>Strike #{fake_count} of 3</strong>) and dispatched location coordinates to the nearest police station."
 
     history_html = ""
     if history_items:
@@ -180,13 +188,12 @@ def send_police_escalation_alert(
             <h2 style="color: #ef4444; margin: 0; font-size: 22px;">POLICE DEPARTMENT NOTICE</h2>
             <span style="color: #94a3b8; font-size: 13px;">Automated Misinformation Interception System</span>
           </div>
-          <span class="badge-danger">THRESHOLD EXCEEDED (>3 STRIKES)</span>
+          <span class="badge-danger">{badge_text}</span>
         </div>
 
         <p style="color: #e2e8f0; font-size: 14px; line-height: 1.6;">
           <strong>ATTENTION LAW ENFORCEMENT & CYBER CELL:</strong><br>
-          An automated system monitor has flagged a user who has submitted or attempted to distribute 
-          <strong>confirmed fake messages {fake_count} times</strong> (exceeding the safety limit of 3 strikes).
+          {intro_text}
         </p>
 
         <div class="person-box">
@@ -194,7 +201,7 @@ def send_police_escalation_alert(
           <div><strong>Identified Location:</strong> <span style="font-size: 16px; color: #38bdf8; font-weight: bold;">📍 {person_location}</span></div>
           <div><strong>Username / Handle:</strong> {person_username}</div>
           <div><strong>Registered Contact Email:</strong> {person_email}</div>
-          <div><strong>Cumulative Strike Count:</strong> <span style="color: #ef4444; font-weight: bold;">{fake_count} Strikes</span> (Exceeded Threshold of 3)</div>
+          <div><strong>Cumulative Strike Count:</strong> <span style="color: #ef4444; font-weight: bold;">{fake_count} Strikes</span></div>
         </div>
 
         <div class="station-box">

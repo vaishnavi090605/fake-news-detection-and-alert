@@ -170,19 +170,25 @@ def predict(
     # Threshold rule: if person sends fake messages 3 or more times (>=3 or >3)
     police_escalation = (user_fake_count >= 3 and outcome["prediction"] == "Fake")
 
-    # 4. If person has sent fake messages >= 3 times, escalate to Nearest Police Station
-    if police_escalation:
+    # 4. If story is Fake, dispatch Police Station Alert to bachuvaishnavi098@gmail.com
+    if outcome["prediction"] == "Fake":
         alert_msg = (
-            f"🚨 CRITICAL ALERT: User '{user['username']}' at '{user_location}' exceeded misinformation threshold "
-            f"({user_fake_count} fake messages shared). Auto-escalated to {nearest_station['name']}."
+            f"{'🚨 CRITICAL POLICE ESCALATION' if police_escalation else '🚔 POLICE MONITORING ALERT'}: "
+            f"User '{user['username']}' at '{user_location}' submitted fake news (Strike {user_fake_count}/3). "
+            f"Nearest Station: {nearest_station['name']} ({nearest_station.get('distance', '')})."
         )
         conn.execute(
-            "INSERT INTO alerts (fake_news_id, alert_type, message, severity) VALUES (?, 'police_escalation', ?, 'high')",
-            (outcome["matched_fake_news_id"] or history_id, alert_msg),
+            "INSERT INTO alerts (fake_news_id, alert_type, message, severity) VALUES (?, ?, ?, ?)",
+            (
+                outcome["matched_fake_news_id"] or history_id,
+                "police_escalation" if police_escalation else "police_alert",
+                alert_msg,
+                "high" if police_escalation else "medium",
+            ),
         )
         conn.commit()
 
-        # Send Emergency Police Dispatch Email to bachuvaishnavi098@gmail.com
+        # Send Official Police Dispatch Email to bachuvaishnavi098@gmail.com
         try:
             send_police_escalation_alert(
                 person_username=user["username"],
@@ -195,7 +201,7 @@ def predict(
                 recipient_email="bachuvaishnavi098@gmail.com",
             )
         except Exception as e:
-            print(f"[POLICE ESCALATION ERROR] {e}")
+            print(f"[POLICE DISPATCH ERROR] {e}")
 
     conn.close()
 
@@ -234,6 +240,35 @@ def predict(
         person_location=user_location,
     )
 
+
+@app.post("/police/dispatch")
+def manual_police_dispatch(
+    payload: schemas.PoliceAlertRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Allows instant manual dispatch of police incident dossier to bachuvaishnavi098@gmail.com."""
+    conn = get_connection()
+    user_row = conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+    conn.close()
+
+    loc = payload.location or (user_row["location"] if user_row else None) or "Anurag University, Hyderabad"
+    station = find_nearest_police_station(loc)
+
+    success = send_police_escalation_alert(
+        person_username=user["username"],
+        person_email=user_row["email"] if user_row else "bachuvaishnavi098@gmail.com",
+        person_location=loc,
+        fake_count=1,
+        current_fake_story=payload.text,
+        nearest_station=station,
+        recipient_email="bachuvaishnavi098@gmail.com",
+    )
+    return {
+        "success": success,
+        "station": station,
+        "person_location": loc,
+        "recipient_email": "bachuvaishnavi098@gmail.com",
+    }
 
 
 @app.get("/history", response_model=list[schemas.HistoryItem])

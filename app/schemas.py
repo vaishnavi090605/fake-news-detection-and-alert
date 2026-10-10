@@ -97,3 +97,8 @@ class AdminStats(BaseModel):
     repeated_count: int
     alerts_count: int
     category_breakdown: dict
+
+
+class PoliceAlertRequest(BaseModel):
+    text: str
+    location: Optional[str] = None

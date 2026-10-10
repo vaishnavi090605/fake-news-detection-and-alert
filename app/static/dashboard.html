@@ -261,18 +261,18 @@
             ⚠️ <strong>Repeated Misinformation Alert:</strong> Alert email dispatched to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station Authority)
           </div>
 
-          <!-- Emergency Police Escalation Banner (>3 Fake Messages Threshold) -->
+          <!-- Emergency Police Escalation & Jurisdiction Banner -->
           <div id="policeEscalationBanner" class="tg-alert-banner" style="display: none; background: rgba(239, 68, 68, 0.15); border: 2px solid var(--danger-color); color: #fecaca; margin-top: 14px; flex-direction: column; align-items: flex-start; gap: 10px; padding: 18px; border-radius: var(--radius-md);">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 8px;">
-              <span style="font-weight: 800; font-size: 1.05rem; color: var(--danger-color); display: flex; align-items: center; gap: 8px;">
+              <span id="policeBannerTitle" style="font-weight: 800; font-size: 1.05rem; color: var(--danger-color); display: flex; align-items: center; gap: 8px;">
                 🚨 CRITICAL POLICE DISPATCH ESCALATION ACTIVATED
               </span>
-              <span class="tg-tag-badge fake" style="font-size: 0.75rem; padding: 4px 10px; font-weight: 700;">LIMIT EXCEEDED (&gt;3 FAKE MESSAGES)</span>
+              <span id="policeBannerTag" class="tg-tag-badge fake" style="font-size: 0.75rem; padding: 4px 10px; font-weight: 700;">POLICE JURISDICTION MAPPED</span>
             </div>
 
-            <div style="font-size: 0.92rem; line-height: 1.6; color: #f1f5f9;">
-              This account has submitted or shared confirmed fake messages <strong id="resStrikeCount" style="color: #ef4444; font-size: 1rem;">3 times</strong>.
-              In accordance with legal and platform safety provisions, this incident has been automatically mapped and escalated to the nearest police station.
+            <div id="policeBannerDesc" style="font-size: 0.92rem; line-height: 1.6; color: #f1f5f9;">
+              This account has submitted or shared confirmed fake messages <strong id="resStrikeCount" style="color: #ef4444; font-size: 1rem;">1 time</strong>.
+              In accordance with platform safety and cybercrime regulations, this incident is automatically mapped and notified to the nearest police station.
             </div>
 
             <div style="background: rgba(7, 11, 22, 0.75); border-radius: 8px; padding: 14px 18px; width: 100%; box-sizing: border-box; font-size: 0.88rem; border: 1px solid rgba(239, 68, 68, 0.35); line-height: 1.8;">
@@ -282,14 +282,18 @@
               <div>📞 <strong>Station Direct Contact:</strong> <span id="resStationPhone" style="color: #e2e8f0;">+91-40-27853400 / Dial 100 / National Cybercrime: 1930</span></div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 4px; width: 100%; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px; margin-top: 4px; width: 100%; flex-wrap: wrap; align-items: center;">
               <a id="resStationMapLink" href="https://maps.google.com/?q=Ghatkesar+Police+Station+Hyderabad" target="_blank" class="tg-example-btn" style="background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue); color: var(--accent-blue); font-weight: 600; text-decoration: none;">
                 📍 View Police Station on Map
               </a>
               <button type="button" class="tg-example-btn" style="background: rgba(239, 68, 68, 0.15); border-color: var(--danger-color); color: var(--danger-color); font-weight: 600;" onclick="openAlertModal()">
                 📄 View Police Incident Dossier
               </button>
+              <button type="button" id="btnDispatchPoliceNow" class="tg-example-btn" style="background: #ef4444; color: #ffffff; border: none; font-weight: 700; cursor: pointer;" onclick="triggerManualPoliceAlert()">
+                🚨 Dispatch Police Alert Email Now
+              </button>
             </div>
+            <div id="dispatchSuccessMsg" style="display: none; padding: 8px 12px; background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; border-radius: 6px; color: #86efac; font-size: 0.85rem; width: 100%; box-sizing: border-box;"></div>
           </div>
         </div>
 
@@ -880,13 +884,35 @@
       banner.style.display = 'flex';
       banner.innerHTML = `📩 <strong>Alert Email Dispatched:</strong> Story analysis sent to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station / Monitoring Cell)`;
 
-      // Police Escalation Alert (>3 Fake Messages Rule)
+      // Police Escalation & Jurisdiction Mapping Alert
       const pBanner = document.getElementById('policeEscalationBanner');
-      if (data.police_escalation || (data.user_fake_count >= 3 && isFake)) {
+      const succMsg = document.getElementById('dispatchSuccessMsg');
+      if (succMsg) succMsg.style.display = 'none';
+
+      if (isFake) {
         pBanner.style.display = 'flex';
+        const isEscalation = (data.police_escalation || data.user_fake_count >= 3);
+        const titleEl = document.getElementById('policeBannerTitle');
+        const tagEl = document.getElementById('policeBannerTag');
+        const descEl = document.getElementById('policeBannerDesc');
+
+        if (isEscalation) {
+          titleEl.textContent = "🚨 CRITICAL POLICE DISPATCH ESCALATION ACTIVATED";
+          titleEl.style.color = "var(--danger-color)";
+          tagEl.textContent = `LIMIT EXCEEDED (${data.user_fake_count} FAKE STORIES)`;
+          tagEl.className = "tg-tag-badge fake";
+          descEl.innerHTML = `This account has submitted or shared confirmed fake messages <strong style="color: #ef4444; font-size: 1rem;">${data.user_fake_count} times</strong> (exceeded 3-strike threshold). Incident dossier escalated to local cybercrime cell.`;
+        } else {
+          titleEl.textContent = `🚔 POLICE DISPATCH MONITORING ACTIVE (STRIKE ${data.user_fake_count} OF 3)`;
+          titleEl.style.color = "#38bdf8";
+          tagEl.textContent = `STRIKE ${data.user_fake_count}/3 REGISTERED`;
+          tagEl.className = "tg-tag-badge";
+          descEl.innerHTML = `Confirmed fake news detected (Strike <strong style="color: #f59e0b;">${data.user_fake_count} of 3</strong>). Incident coordinates and nearest jurisdiction mapped below.`;
+        }
+
         document.getElementById('resStrikeCount').textContent = `${data.user_fake_count} confirmed fake stories`;
         if (data.nearest_police_station) {
-          document.getElementById('resStationName').textContent = data.nearest_police_station.name || 'Ghatkesar Police Station & Cyber Monitoring Cell';
+          document.getElementById('resStationName').textContent = `${data.nearest_police_station.name} (${data.nearest_police_station.distance || ''})`;
           document.getElementById('resStationPhone').textContent = `${data.nearest_police_station.phone || '+91-40-27853400'} | Dial 100 / Cybercrime: 1930`;
           if (data.nearest_police_station.maps_link) {
             document.getElementById('resStationMapLink').href = data.nearest_police_station.maps_link;
@@ -895,6 +921,32 @@
         document.getElementById('resPersonLocation').textContent = data.person_location || 'Anurag University, Hyderabad';
       } else {
         pBanner.style.display = 'none';
+      }
+    }
+
+    async function triggerManualPoliceAlert() {
+      const btn = document.getElementById('btnDispatchPoliceNow');
+      const succMsg = document.getElementById('dispatchSuccessMsg');
+      const text = document.getElementById('newsText').value.trim();
+      const loc = document.getElementById('newsLocation').value.trim();
+
+      if (!text) {
+        alert("Please enter news story text first.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "⏳ Dispatching to Police Station...";
+
+      try {
+        const res = await API.dispatchPoliceAlert(text, loc);
+        succMsg.style.display = "block";
+        succMsg.innerHTML = `✅ <strong>Emergency Police Dispatch Sent Successfully!</strong> Email sent to <strong>${res.recipient_email || 'bachuvaishnavi098@gmail.com'}</strong> &amp; mapped to <strong>${res.station.name}</strong>.`;
+      } catch (err) {
+        alert("Police dispatch failed: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🚨 Dispatch Police Alert Email Now";
       }
     }
 

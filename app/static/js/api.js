@@ -92,6 +92,13 @@ const API = {
     return this.request("/predict", { method: "POST", body });
   },
 
+  dispatchPoliceAlert(text, location) {
+    return this.request("/police/dispatch", {
+      method: "POST",
+      body: { text, location },
+    });
+  },
+
 
   history() {
     return this.request("/history");
