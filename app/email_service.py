@@ -162,10 +162,10 @@ def send_fake_news_alert(
                 server.login(SMTP_USER, SMTP_PASSWORD)
                 server.sendmail(SMTP_USER, target_email, msg.as_string())
 
-            print(f"[EMAIL ALERT] Alert email sent successfully to {target_email} via Gmail SMTP!")
+            print(f"[EMAIL ALERT] Alert email sent successfully to {target_email} via Gmail SMTP!", flush=True)
             return True
         except Exception as e:
-            print(f"[EMAIL ERROR] SMTP dispatch failed: {e}")
+            print(f"[EMAIL ERROR] SMTP dispatch failed: {e}", flush=True)
             return False
 
     return False
@@ -314,10 +314,10 @@ def send_police_escalation_alert(
                 server.login(SMTP_USER, SMTP_PASSWORD)
                 server.sendmail(SMTP_USER, target_email, msg.as_string())
 
-            print(f"[POLICE DISPATCH] High-priority Police Escalation email sent to {target_email} via Gmail SMTP!")
+            print(f"[POLICE DISPATCH] High-priority Police Escalation email sent to {target_email} via Gmail SMTP!", flush=True)
             return True
         except Exception as e:
-            print(f"[POLICE DISPATCH ERROR] Failed to send police email via SMTP: {e}")
+            print(f"[POLICE DISPATCH ERROR] Failed to send police email via SMTP: {e}", flush=True)
             return False
 
     return False
