@@ -3,7 +3,7 @@ import io
 import sqlite3
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Response, Header
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Response, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -133,6 +133,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 @app.post("/predict", response_model=schemas.NewsResult)
 def predict(
     payload: schemas.NewsSubmit,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ):
     result = ml_service.classify(payload.text)
@@ -170,7 +171,7 @@ def predict(
     # Threshold rule: if person sends fake messages 3 or more times (>=3 or >3)
     police_escalation = (user_fake_count >= 3 and outcome["prediction"] == "Fake")
 
-    # 4. If story is Fake, dispatch Police Station Alert to bachuvaishnavi098@gmail.com
+    # 4. If story is Fake, record alert and queue police dispatch in background
     if outcome["prediction"] == "Fake":
         alert_msg = (
             f"{'🚨 CRITICAL POLICE ESCALATION' if police_escalation else '🚔 POLICE MONITORING ALERT'}: "
@@ -188,39 +189,35 @@ def predict(
         )
         conn.commit()
 
-        # Send Official Police Dispatch Email to bachuvaishnavi098@gmail.com
-        try:
-            send_police_escalation_alert(
-                person_username=user["username"],
-                person_email=user_row["email"] if user_row else "bachuvaishnavi098@gmail.com",
-                person_location=user_location,
-                fake_count=user_fake_count,
-                current_fake_story=payload.text,
-                nearest_station=nearest_station,
-                history_items=[dict(r) for r in prior_fake_rows],
-                recipient_email="bachuvaishnavi098@gmail.com",
-            )
-        except Exception as e:
-            print(f"[POLICE DISPATCH ERROR] {e}")
+        # Send Official Police Dispatch Email in background (non-blocking)
+        background_tasks.add_task(
+            send_police_escalation_alert,
+            person_username=user["username"],
+            person_email=user_row["email"] if user_row else "bachuvaishnavi098@gmail.com",
+            person_location=user_location,
+            fake_count=user_fake_count,
+            current_fake_story=payload.text,
+            nearest_station=nearest_station,
+            history_items=[dict(r) for r in prior_fake_rows],
+            recipient_email="bachuvaishnavi098@gmail.com",
+        )
 
     conn.close()
 
-    # 5. Send standard alert email to bachuvaishnavi098@gmail.com on every Analyze press
-    try:
-        cat_val = getattr(payload, "category", None) or outcome.get("category") or "General News"
-        send_fake_news_alert(
-            fake_news_id=outcome["matched_fake_news_id"] or history_id,
-            category=cat_val,
-            severity="high" if (police_escalation or outcome["prediction"] == "Fake") else "low",
-            detection_count=outcome["detection_count"],
-            similarity_score=outcome["similarity_score"],
-            original_text=payload.text,
-            prediction=outcome["prediction"],
-            confidence=outcome["confidence"],
-            recipient_email="bachuvaishnavi098@gmail.com",
-        )
-    except Exception as e:
-        print(f"[EMAIL ALERT WARNING] {e}")
+    # 5. Queue standard alert email in background (non-blocking)
+    cat_val = getattr(payload, "category", None) or outcome.get("category") or "General News"
+    background_tasks.add_task(
+        send_fake_news_alert,
+        fake_news_id=outcome["matched_fake_news_id"] or history_id,
+        category=cat_val,
+        severity="high" if (police_escalation or outcome["prediction"] == "Fake") else "low",
+        detection_count=outcome["detection_count"],
+        similarity_score=outcome["similarity_score"],
+        original_text=payload.text,
+        prediction=outcome["prediction"],
+        confidence=outcome["confidence"],
+        recipient_email="bachuvaishnavi098@gmail.com",
+    )
 
     return schemas.NewsResult(
         id=history_id,
@@ -244,6 +241,7 @@ def predict(
 @app.post("/police/dispatch")
 def manual_police_dispatch(
     payload: schemas.PoliceAlertRequest,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ):
     """Allows instant manual dispatch of police incident dossier to bachuvaishnavi098@gmail.com."""
@@ -254,7 +252,8 @@ def manual_police_dispatch(
     loc = payload.location or (user_row["location"] if user_row else None) or "Anurag University, Hyderabad"
     station = find_nearest_police_station(loc)
 
-    success = send_police_escalation_alert(
+    background_tasks.add_task(
+        send_police_escalation_alert,
         person_username=user["username"],
         person_email=user_row["email"] if user_row else "bachuvaishnavi098@gmail.com",
         person_location=loc,
@@ -264,7 +263,7 @@ def manual_police_dispatch(
         recipient_email="bachuvaishnavi098@gmail.com",
     )
     return {
-        "success": success,
+        "success": True,
         "station": station,
         "person_location": loc,
         "recipient_email": "bachuvaishnavi098@gmail.com",

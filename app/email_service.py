@@ -119,7 +119,7 @@ def send_fake_news_alert(
             msg["To"] = target_email
             msg.attach(MIMEText(html_content, "html"))
 
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=4) as server:
                 server.starttls()
                 server.login(SMTP_USER, SMTP_PASSWORD)
                 server.sendmail(SMTP_USER, target_email, msg.as_string())
@@ -240,7 +240,7 @@ def send_police_escalation_alert(
             msg["To"] = target_email
             msg.attach(MIMEText(html_content, "html"))
 
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=4) as server:
                 server.starttls()
                 server.login(SMTP_USER, SMTP_PASSWORD)
                 server.sendmail(SMTP_USER, target_email, msg.as_string())

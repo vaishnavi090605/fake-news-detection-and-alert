@@ -17,7 +17,7 @@ class Token(BaseModel):
 
 
 class NewsSubmit(BaseModel):
-    text: str = Field(..., min_length=10, description="Raw news/article text to check")
+    text: str = Field(..., min_length=3, description="Raw news/article text to check")
     category: Optional[str] = "General News"
     source_url: Optional[str] = None
     submission_category: Optional[str] = "news_article"  # news_article, social_media_post, forwarded_message
