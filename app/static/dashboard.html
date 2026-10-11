@@ -292,6 +292,9 @@
               <button type="button" id="btnDispatchPoliceNow" class="tg-example-btn" style="background: #ef4444; color: #ffffff; border: none; font-weight: 700; cursor: pointer;" onclick="triggerManualPoliceAlert()">
                 🚨 Dispatch Police Alert Email Now
               </button>
+              <a id="btnMailtoPolice" href="mailto:bachuvaishnavi098@gmail.com?subject=TruthGuard%20Police%20Alert" target="_blank" class="tg-example-btn" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                ✉️ Open Pre-Filled Police Email
+              </a>
             </div>
             <div id="dispatchSuccessMsg" style="display: none; padding: 8px 12px; background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; border-radius: 6px; color: #86efac; font-size: 0.85rem; width: 100%; box-sizing: border-box;"></div>
           </div>
@@ -861,65 +864,111 @@
     }
 
     function renderResultCard(data) {
+      if (!data) return;
       const card = document.getElementById('resultCard');
-      card.style.display = 'block';
+      if (card) card.style.display = 'block';
 
       const isFake = (data.prediction === 'Fake');
       const isInc = (data.prediction === 'Inconclusive');
       const badge = document.getElementById('resPrediction');
-      badge.textContent = data.prediction.toUpperCase();
-      badge.className = `tg-tag-badge ${isFake ? 'fake' : (isInc ? 'inconclusive' : 'genuine')}`;
+      if (badge) {
+        badge.textContent = (data.prediction || 'GENUINE').toUpperCase();
+        badge.className = `tg-tag-badge ${isFake ? 'fake' : (isInc ? 'inconclusive' : 'genuine')}`;
+      }
 
-      document.getElementById('resCategory').textContent = data.category || 'Politics';
-      const conf = (Number(data.confidence) * 100).toFixed(1);
-      document.getElementById('resConfidence').textContent = `${conf}%`;
-      document.getElementById('resConfidenceFill').style.width = `${conf}%`;
+      const catEl = document.getElementById('resCategory');
+      if (catEl) catEl.textContent = data.category || 'Politics';
+
+      const conf = (Number(data.confidence || 0) * 100).toFixed(1);
+      const confEl = document.getElementById('resConfidence');
+      if (confEl) confEl.textContent = `${conf}%`;
+      const fillEl = document.getElementById('resConfidenceFill');
+      if (fillEl) fillEl.style.width = `${conf}%`;
 
       const simVal = data.similarity_score != null ? (Number(data.similarity_score) * 100).toFixed(1) + '%' : (isFake ? '100.0%' : '0.0%');
-      document.getElementById('resSimilarity').textContent = simVal;
-      document.getElementById('resCount').textContent = `${data.detection_count || 1}x`;
-      document.getElementById('resSeverity').textContent = isFake ? (data.severity && data.severity !== 'none' ? data.severity.charAt(0).toUpperCase() + data.severity.slice(1) : 'High') : 'None';
+      const simEl = document.getElementById('resSimilarity');
+      if (simEl) simEl.textContent = simVal;
+
+      const cntEl = document.getElementById('resCount');
+      if (cntEl) cntEl.textContent = `${data.detection_count || 1}x`;
+
+      const sevEl = document.getElementById('resSeverity');
+      if (sevEl) {
+        sevEl.textContent = isFake ? (data.severity && data.severity !== 'none' ? data.severity.charAt(0).toUpperCase() + data.severity.slice(1) : 'High') : 'None';
+      }
 
       const banner = document.getElementById('repeatedBanner');
-      banner.style.display = 'flex';
-      banner.innerHTML = `📩 <strong>Alert Email Dispatched:</strong> Story analysis sent to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station / Monitoring Cell)`;
+      if (banner) {
+        banner.style.display = 'flex';
+        banner.innerHTML = `📩 <strong>Alert Email Dispatched:</strong> Story analysis sent to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station / Monitoring Cell)`;
+      }
 
       // Police Escalation & Jurisdiction Mapping Alert
       const pBanner = document.getElementById('policeEscalationBanner');
       const succMsg = document.getElementById('dispatchSuccessMsg');
       if (succMsg) succMsg.style.display = 'none';
 
-      if (isFake) {
+      if (isFake && pBanner) {
         pBanner.style.display = 'flex';
-        const isEscalation = (data.police_escalation || data.user_fake_count >= 3);
+        const strikeCount = data.user_fake_count || 1;
+        const isEscalation = (data.police_escalation || strikeCount >= 3);
         const titleEl = document.getElementById('policeBannerTitle');
         const tagEl = document.getElementById('policeBannerTag');
         const descEl = document.getElementById('policeBannerDesc');
 
-        if (isEscalation) {
-          titleEl.textContent = "🚨 CRITICAL POLICE DISPATCH ESCALATION ACTIVATED";
-          titleEl.style.color = "var(--danger-color)";
-          tagEl.textContent = `LIMIT EXCEEDED (${data.user_fake_count} FAKE STORIES)`;
-          tagEl.className = "tg-tag-badge fake";
-          descEl.innerHTML = `This account has submitted or shared confirmed fake messages <strong style="color: #ef4444; font-size: 1rem;">${data.user_fake_count} times</strong> (exceeded 3-strike threshold). Incident dossier escalated to local cybercrime cell.`;
-        } else {
-          titleEl.textContent = `🚔 POLICE DISPATCH MONITORING ACTIVE (STRIKE ${data.user_fake_count} OF 3)`;
-          titleEl.style.color = "#38bdf8";
-          tagEl.textContent = `STRIKE ${data.user_fake_count}/3 REGISTERED`;
-          tagEl.className = "tg-tag-badge";
-          descEl.innerHTML = `Confirmed fake news detected (Strike <strong style="color: #f59e0b;">${data.user_fake_count} of 3</strong>). Incident coordinates and nearest jurisdiction mapped below.`;
-        }
-
-        document.getElementById('resStrikeCount').textContent = `${data.user_fake_count} confirmed fake stories`;
-        if (data.nearest_police_station) {
-          document.getElementById('resStationName').textContent = `${data.nearest_police_station.name} (${data.nearest_police_station.distance || ''})`;
-          document.getElementById('resStationPhone').textContent = `${data.nearest_police_station.phone || '+91-40-27853400'} | Dial 100 / Cybercrime: 1930`;
-          if (data.nearest_police_station.maps_link) {
-            document.getElementById('resStationMapLink').href = data.nearest_police_station.maps_link;
+        if (titleEl) {
+          if (isEscalation) {
+            titleEl.textContent = "🚨 CRITICAL POLICE DISPATCH ESCALATION ACTIVATED";
+            titleEl.style.color = "var(--danger-color)";
+          } else {
+            titleEl.textContent = `🚔 POLICE DISPATCH MONITORING ACTIVE (STRIKE ${strikeCount} OF 3)`;
+            titleEl.style.color = "#38bdf8";
           }
         }
-        document.getElementById('resPersonLocation').textContent = data.person_location || 'Anurag University, Hyderabad';
-      } else {
+
+        if (tagEl) {
+          if (isEscalation) {
+            tagEl.textContent = `LIMIT EXCEEDED (${strikeCount} FAKE STORIES)`;
+            tagEl.className = "tg-tag-badge fake";
+          } else {
+            tagEl.textContent = `STRIKE ${strikeCount}/3 REGISTERED`;
+            tagEl.className = "tg-tag-badge";
+          }
+        }
+
+        if (descEl) {
+          if (isEscalation) {
+            descEl.innerHTML = `This account has submitted or shared confirmed fake messages <strong style="color: #ef4444; font-size: 1rem;">${strikeCount} times</strong> (exceeded 3-strike threshold). Incident dossier escalated to local cybercrime cell.`;
+          } else {
+            descEl.innerHTML = `Confirmed fake news detected (Strike <strong style="color: #f59e0b;">${strikeCount} of 3</strong>). Incident coordinates and nearest jurisdiction mapped below.`;
+          }
+        }
+
+        const strikeEl = document.getElementById('resStrikeCount');
+        if (strikeEl) strikeEl.textContent = `${strikeCount} confirmed fake stories`;
+
+        if (data.nearest_police_station) {
+          const stName = document.getElementById('resStationName');
+          if (stName) stName.textContent = `${data.nearest_police_station.name} (${data.nearest_police_station.distance || ''})`;
+          const stPhone = document.getElementById('resStationPhone');
+          if (stPhone) stPhone.textContent = `${data.nearest_police_station.phone || '+91-40-27853400'} | Dial 100 / Cybercrime: 1930`;
+          const mapLink = document.getElementById('resStationMapLink');
+          if (mapLink && data.nearest_police_station.maps_link) {
+            mapLink.href = data.nearest_police_station.maps_link;
+          }
+        }
+        const personLoc = document.getElementById('resPersonLocation');
+        if (personLoc) personLoc.textContent = data.person_location || 'Anurag University, Hyderabad';
+
+        const mailtoBtn = document.getElementById('btnMailtoPolice');
+        if (mailtoBtn) {
+          const stTitle = data.nearest_police_station?.name || 'Nearest Police Station';
+          const newsStory = document.getElementById('newsText')?.value || '';
+          const sub = encodeURIComponent(`🚨 [TRUTHGUARD POLICE ALERT] Confirmed Fake Story Flagged (Strike ${strikeCount}/3) - Location: ${data.person_location || 'Hyderabad'}`);
+          const bod = encodeURIComponent(`POLICE DISPATCH INCIDENT DOSSIER\n----------------------------------------\nSuspect Geolocation: ${data.person_location || 'Hyderabad'}\nAssigned Police Jurisdiction: ${stTitle}\nStrike Count: Strike ${strikeCount} of 3\nTarget Police Email: bachuvaishnavi098@gmail.com\n\nFLAGGED STORY CONTENT:\n"${newsStory}"\n\nReported automatically by TruthGuard AI in compliance with IT Act 2000.`);
+          mailtoBtn.href = `mailto:bachuvaishnavi098@gmail.com?subject=${sub}&body=${bod}`;
+        }
+      } else if (pBanner) {
         pBanner.style.display = 'none';
       }
     }
@@ -927,26 +976,34 @@
     async function triggerManualPoliceAlert() {
       const btn = document.getElementById('btnDispatchPoliceNow');
       const succMsg = document.getElementById('dispatchSuccessMsg');
-      const text = document.getElementById('newsText').value.trim();
-      const loc = document.getElementById('newsLocation').value.trim();
+      const text = document.getElementById('newsText')?.value?.trim() || "";
+      const loc = document.getElementById('newsLocation')?.value?.trim() || "";
 
       if (!text) {
         alert("Please enter news story text first.");
         return;
       }
 
-      btn.disabled = true;
-      btn.textContent = "⏳ Dispatching to Police Station...";
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ Dispatching to Police Station...";
+      }
 
       try {
         const res = await API.dispatchPoliceAlert(text, loc);
-        succMsg.style.display = "block";
-        succMsg.innerHTML = `✅ <strong>Emergency Police Dispatch Sent Successfully!</strong> Email sent to <strong>${res.recipient_email || 'bachuvaishnavi098@gmail.com'}</strong> &amp; mapped to <strong>${res.station.name}</strong>.`;
+        if (succMsg) {
+          succMsg.style.display = "block";
+          const stName = (res && res.station && res.station.name) ? res.station.name : 'Nearest Police Station';
+          const recEmail = (res && res.recipient_email) ? res.recipient_email : 'bachuvaishnavi098@gmail.com';
+          succMsg.innerHTML = `✅ <strong>Emergency Police Dispatch Sent Successfully!</strong> Email sent to <strong>${recEmail}</strong> &amp; mapped to <strong>${stName}</strong>.`;
+        }
       } catch (err) {
         alert("Police dispatch failed: " + err.message);
       } finally {
-        btn.disabled = false;
-        btn.textContent = "🚨 Dispatch Police Alert Email Now";
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "🚨 Dispatch Police Alert Email Now";
+        }
       }
     }
 
