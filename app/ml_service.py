@@ -55,15 +55,47 @@ class MLService:
         Returns:
             {
                 "clean_text": ...,
-                "prediction": "Fake" | "Genuine",
+                "prediction": "Fake" | "Genuine" | "Inconclusive",
                 "confidence": 0.0-1.0,   # confidence in the PREDICTED class
-                "category": "Politics" | "Health" | ...
+                "category": "Politics" | "Health" | "Crime" | ...
             }
         """
+        import re
+
         cleaned = clean_text(raw_text)
+        lower_raw = raw_text.lower()
 
+        # 1. High-Precision Heuristic Detection: Lottery Scams, Phishing, Bank Fraud & Health Hoaxes
+        lottery_match = bool(re.search(r"\b(?:won|winner|win|claim)\b.*\b(?:lottery|jackpot|cash prize|prize|draw|crore|lakh|million)\b", lower_raw))
+        no_ticket_match = bool(re.search(r"\b(?:never|without)\b.*\b(?:purchased|bought|buying|got|had)\b.*\b(?:ticket|entry|coupon)\b", lower_raw))
+        congrats_match = bool(re.search(r"\b(?:congratulations|congrats)\b.*\b(?:won|claim|prize|lottery|selected)\b", lower_raw))
+        bank_details_match = bool(re.search(r"\b(?:send|share|provide|enter|submit|reply with)\b.*\b(?:bank details|account number|account details|card details|debit card|credit card|cvv|otp|pin|password)\b", lower_raw))
+        kyc_phishing_match = bool(re.search(r"\b(?:kyc|pan card|aadhaar|bank account)\b.*(?:suspended|blocked|deactivated|expire|update immediately)", lower_raw))
+        miracle_cure_match = bool(re.search(r"\b(?:miracle|secret|guaranteed|100%)\b.*\b(?:cure|treatment|remedy)\b", lower_raw))
+        cure_all_match = bool(re.search(r"\b(?:kills|cures)\b.*(?:all (?:virus|viruses|diseases?|infections?|cancer)).*(?:in \d+|guaranteed|instantly|minutes|hours)", lower_raw))
+        vaccine_microchip_match = bool(re.search(r"\bvaccine.*(?:microchip|magnetic|control (?:mind|humans?))", lower_raw))
+        gov_giveaway_match = bool(re.search(r"\b(?:modi|pm|government|cm)\b.*(?:giving|providing|announces?)\b.*(?:free (?:recharge|laptop|smartphone|electricity|money|cash))\b.*(?:click|link|register)", lower_raw))
+
+        is_scam = (
+            (lottery_match and (no_ticket_match or bank_details_match or congrats_match)) or
+            (bank_details_match and (lottery_match or congrats_match or "prize" in lower_raw or "lottery" in lower_raw)) or
+            (no_ticket_match and (lottery_match or congrats_match)) or
+            kyc_phishing_match or
+            miracle_cure_match or cure_all_match or vaccine_microchip_match or
+            gov_giveaway_match
+        )
+
+        if is_scam:
+            category = "Crime" if (bank_details_match or lottery_match or kyc_phishing_match or gov_giveaway_match) else "Health"
+            return {
+                "clean_text": cleaned,
+                "prediction": "Fake",
+                "confidence": 0.985,
+                "category": category,
+            }
+
+        # 2. Machine Learning TF-IDF Classifier for general news
         vec = self.vectorizer.transform([cleaned])
-
         proba = self.model.predict_proba(vec)[0]  # [P(fake), P(genuine)]
         pred_index = int(proba.argmax())
         confidence = float(proba[pred_index])

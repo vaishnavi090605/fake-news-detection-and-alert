@@ -19,32 +19,7 @@ raw_pass = env.get("SMTP_PASSWORD") or os.environ.get("SMTP_PASSWORD") or "prsh 
 SMTP_PASSWORD = raw_pass.replace(" ", "").strip()
 
 
-def _dispatch_via_https(target_email: str, subject: str, message: str) -> bool:
-    try:
-        import json
-        import urllib.request
-        url = f"https://formsubmit.co/ajax/{target_email}"
-        payload = {
-            "name": "TruthGuard AI Interception Network",
-            "_subject": subject,
-            "message": message,
-            "_template": "table",
-        }
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "Origin": "https://fake-news-detection-and-alert-1.onrender.com",
-            "Referer": "https://fake-news-detection-and-alert-1.onrender.com/",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        }
-        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
-        with urllib.request.urlopen(req, timeout=6) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            print(f"[HTTPS EMAIL] Dispatched to {target_email} via HTTPS: {data}")
-            return True
-    except Exception as ex:
-        print(f"[HTTPS EMAIL ERROR] Fallback HTTPS dispatch failed: {ex}")
-        return False
+
 
 
 def send_fake_news_alert(
@@ -190,11 +165,10 @@ def send_fake_news_alert(
             print(f"[EMAIL ALERT] Alert email sent successfully to {target_email} via Gmail SMTP!")
             return True
         except Exception as e:
-            print(f"[EMAIL ERROR] SMTP dispatch failed ({e}), trying HTTPS fallback...")
+            print(f"[EMAIL ERROR] SMTP dispatch failed: {e}")
+            return False
 
-    # 2. Fallback via HTTPS Port 443 (works when SMTP port 587 is firewalled on cloud hosts like Render)
-    _dispatch_via_https(target_email, subject, plain_text)
-    return True
+    return False
 
 
 def send_police_escalation_alert(
@@ -343,7 +317,7 @@ def send_police_escalation_alert(
             print(f"[POLICE DISPATCH] High-priority Police Escalation email sent to {target_email} via Gmail SMTP!")
             return True
         except Exception as e:
-            print(f"[POLICE DISPATCH ERROR] Failed to send police email via SMTP ({e}), trying HTTPS fallback...")
+            print(f"[POLICE DISPATCH ERROR] Failed to send police email via SMTP: {e}")
+            return False
 
-    _dispatch_via_https(target_email, subject, plain_text)
-    return True
+    return False
