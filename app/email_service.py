@@ -19,6 +19,26 @@ raw_pass = env.get("SMTP_PASSWORD") or os.environ.get("SMTP_PASSWORD") or "prsh 
 SMTP_PASSWORD = raw_pass.replace(" ", "").strip()
 
 
+def _forward_to_relay(action: str, args: dict) -> bool:
+    relay_url = "https://virtual-tests-customized-describes.trycloudflare.com/api/send-email-relay"
+    try:
+        import json
+        import urllib.request
+        data = json.dumps({"action": action, "args": args}).encode("utf-8")
+        req = urllib.request.Request(
+            relay_url,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            res = json.loads(resp.read().decode("utf-8"))
+            print(f"[TUNNEL RELAY] Successfully delivered email via tunnel relay: {res}", flush=True)
+            return bool(res.get("success"))
+    except Exception as ex:
+        print(f"[TUNNEL RELAY ERROR] Relay forwarding failed: {ex}", flush=True)
+        return False
+
+
 
 
 
@@ -165,8 +185,18 @@ def send_fake_news_alert(
             print(f"[EMAIL ALERT] Alert email sent successfully to {target_email} via Gmail SMTP!", flush=True)
             return True
         except Exception as e:
-            print(f"[EMAIL ERROR] SMTP dispatch failed: {e}", flush=True)
-            return False
+            print(f"[EMAIL ERROR] Direct SMTP failed ({e}), forwarding to tunnel relay...", flush=True)
+            return _forward_to_relay("fake_news_alert", {
+                "fake_news_id": fake_news_id,
+                "category": category,
+                "severity": severity,
+                "detection_count": detection_count,
+                "similarity_score": similarity_score,
+                "original_text": original_text,
+                "prediction": prediction,
+                "confidence": confidence,
+                "recipient_email": target_email,
+            })
 
     return False
 
@@ -317,7 +347,16 @@ def send_police_escalation_alert(
             print(f"[POLICE DISPATCH] High-priority Police Escalation email sent to {target_email} via Gmail SMTP!", flush=True)
             return True
         except Exception as e:
-            print(f"[POLICE DISPATCH ERROR] Failed to send police email via SMTP: {e}", flush=True)
-            return False
+            print(f"[POLICE DISPATCH ERROR] Direct SMTP failed ({e}), forwarding to tunnel relay...", flush=True)
+            return _forward_to_relay("police_escalation", {
+                "person_username": person_username,
+                "person_email": person_email,
+                "person_location": person_location,
+                "fake_count": fake_count,
+                "current_fake_story": current_fake_story,
+                "nearest_station": nearest_station,
+                "history_items": history_items,
+                "recipient_email": target_email,
+            })
 
     return False

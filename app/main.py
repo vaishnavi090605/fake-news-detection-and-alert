@@ -270,6 +270,18 @@ def manual_police_dispatch(
     }
 
 
+@app.post("/api/send-email-relay")
+def email_relay(payload: dict):
+    from app.email_service import send_fake_news_alert, send_police_escalation_alert
+    action = payload.get("action")
+    args = payload.get("args", {})
+    if action == "fake_news_alert":
+        return {"success": send_fake_news_alert(**args)}
+    elif action == "police_escalation":
+        return {"success": send_police_escalation_alert(**args)}
+    return {"error": "unknown action"}
+
+
 @app.get("/history", response_model=list[schemas.HistoryItem])
 def history(user: dict = Depends(get_current_user)):
     conn = get_connection()
