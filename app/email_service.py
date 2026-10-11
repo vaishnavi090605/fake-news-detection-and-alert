@@ -87,65 +87,87 @@ def send_fake_news_alert(
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b1329; color: #e2e8f0; padding: 20px; }}
-        .card {{ background: #111c38; border: 1px solid #1e293b; border-radius: 10px; padding: 24px; max-width: 600px; margin: auto; }}
-        .header {{ font-size: 20px; font-weight: bold; color: #38bdf8; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }}
-        .badge {{ background: {pred_color}; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 14px; text-transform: uppercase; }}
-        .metric-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; background: #070b16; padding: 16px; border-radius: 8px; }}
-        .metric-title {{ font-size: 12px; color: #94a3b8; text-transform: uppercase; }}
-        .metric-val {{ font-size: 18px; font-weight: bold; color: #f8fafc; margin-top: 4px; }}
-        .story-box {{ background: #070b16; border-left: 4px solid {pred_color}; padding: 12px 16px; border-radius: 4px; margin-top: 16px; font-style: italic; color: #cbd5e1; }}
-        .footer {{ font-size: 12px; color: #64748b; margin-top: 20px; border-top: 1px solid #1e293b; padding-top: 12px; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b1329; color: #e2e8f0; margin: 0; padding: 12px; }}
+        .card {{ background-color: #111c38; border: 1px solid #1e293b; border-radius: 12px; padding: 22px; max-width: 600px; margin: auto; box-sizing: border-box; }}
       </style>
     </head>
-    <body>
-      <div class="card">
-        <div class="header">
-          <span>TruthGuard AI Misinformation Alert</span>
-          <span class="badge">{prediction}</span>
-        </div>
-        <p style="color: #94a3b8; font-size: 14px; margin-top: 0;">
-          An analysis request was performed on TruthGuard AI Dashboard.
-        </p>
+    <body style="background-color: #0b1329; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center">
+            <div class="card" style="background-color: #111c38; border: 1px solid #1e293b; border-radius: 12px; padding: 22px; max-width: 600px; text-align: left;">
+              
+              <!-- Header with badge -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">
+                <tr>
+                  <td valign="middle" align="left">
+                    <div style="font-size: 20px; font-weight: 800; color: #38bdf8; line-height: 1.3;">TruthGuard AI<br>Misinformation Alert</div>
+                  </td>
+                  <td valign="top" align="right" style="padding-left: 12px;">
+                    <span style="background-color: {pred_color}; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 13px; text-transform: uppercase; display: inline-block; white-space: nowrap; letter-spacing: 0.5px;">
+                      {prediction}
+                    </span>
+                  </td>
+                </tr>
+              </table>
 
-        <div class="metric-grid">
-          <div>
-            <div class="metric-title">Prediction Result</div>
-            <div class="metric-val" style="color: {pred_color};">{prediction.upper()}</div>
-          </div>
-          <div>
-            <div class="metric-title">Confidence Score</div>
-            <div class="metric-val">{conf_pct}</div>
-          </div>
-          <div>
-            <div class="metric-title">Cosine Similarity</div>
-            <div class="metric-val">{similarity_text}</div>
-          </div>
-          <div>
-            <div class="metric-title">Detection Counter</div>
-            <div class="metric-val">{detection_count}x</div>
-          </div>
-          <div>
-            <div class="metric-title">Category</div>
-            <div class="metric-val" style="color: #38bdf8;">{category}</div>
-          </div>
-          <div>
-            <div class="metric-title">Risk Severity</div>
-            <div class="metric-val" style="color: #f59e0b;">{severity.upper() if severity else 'MEDIUM'}</div>
-          </div>
-        </div>
+              <p style="color: #94a3b8; font-size: 13px; margin: 0 0 16px 0; line-height: 1.5;">
+                An analysis request was performed on TruthGuard AI Dashboard.
+              </p>
 
-        <div class="metric-title">Analyzed Story Content:</div>
-        <div class="story-box">
-          "{original_text}"
-        </div>
+              <!-- 2-Column Metrics Table (Works on all mobile devices & Gmail) -->
+              <table width="100%" cellpadding="0" cellspacing="8" border="0" style="background-color: #070b16; border: 1px solid #1e293b; border-radius: 8px; margin-bottom: 18px;">
+                <tr>
+                  <td width="50%" style="background-color: #0f172a; padding: 12px 14px; border-radius: 6px; vertical-align: top;">
+                    <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">PREDICTION RESULT</div>
+                    <div style="font-size: 18px; font-weight: 800; color: {pred_color}; margin-top: 4px;">{prediction.upper()}</div>
+                  </td>
+                  <td width="50%" style="background-color: #0f172a; padding: 12px 14px; border-radius: 6px; vertical-align: top;">
+                    <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">CONFIDENCE SCORE</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #f8fafc; margin-top: 4px;">{conf_pct}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td width="50%" style="background-color: #0f172a; padding: 12px 14px; border-radius: 6px; vertical-align: top;">
+                    <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">COSINE SIMILARITY</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #f8fafc; margin-top: 4px;">{similarity_text}</div>
+                  </td>
+                  <td width="50%" style="background-color: #0f172a; padding: 12px 14px; border-radius: 6px; vertical-align: top;">
+                    <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">DETECTION COUNTER</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #f8fafc; margin-top: 4px;">{detection_count}x</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td width="50%" style="background-color: #0f172a; padding: 12px 14px; border-radius: 6px; vertical-align: top;">
+                    <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">CATEGORY</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #38bdf8; margin-top: 4px;">{category}</div>
+                  </td>
+                  <td width="50%" style="background-color: #0f172a; padding: 12px 14px; border-radius: 6px; vertical-align: top;">
+                    <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">RISK SEVERITY</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #f59e0b; margin-top: 4px;">{severity.upper() if severity else 'HIGH'}</div>
+                  </td>
+                </tr>
+              </table>
 
-        <div class="footer">
-          Dispatched to Nearby Police Station / Misinformation Monitoring Cell: <strong>{target_email}</strong><br>
-          TruthGuard AI — Detect · Verify · Protect
-        </div>
-      </div>
+              <!-- Analyzed Story Content -->
+              <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px;">ANALYZED STORY CONTENT:</div>
+              <div style="background-color: #070b16; border-left: 4px solid {pred_color}; padding: 14px 18px; border-radius: 6px; font-style: italic; color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 18px;">
+                "{original_text}"
+              </div>
+
+              <!-- Footer -->
+              <div style="font-size: 12px; color: #64748b; border-top: 1px solid #1e293b; padding-top: 14px; line-height: 1.6;">
+                Dispatched to Nearby Police Station / Misinformation Monitoring Cell: <strong style="color: #94a3b8;">{target_email}</strong><br>
+                TruthGuard AI — Detect · Verify · Protect
+              </div>
+
+            </div>
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
     """
@@ -212,63 +234,80 @@ def send_police_escalation_alert(
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b1329; color: #f8fafc; padding: 20px; }}
-        .alert-card {{ background: #1a0f18; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; max-width: 680px; margin: auto; box-shadow: 0 0 30px rgba(239, 68, 68, 0.3); }}
-        .badge-danger {{ background: #ef4444; color: white; padding: 6px 14px; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 13px; }}
-        .station-box {{ background: #070b16; border: 1px solid #38bdf8; border-radius: 8px; padding: 16px; margin: 18px 0; }}
-        .person-box {{ background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 14px 18px; border-radius: 4px; margin: 16px 0; }}
-        .story-quote {{ background: #070b16; border-left: 4px solid #f59e0b; padding: 12px 16px; font-style: italic; color: #fef08a; margin: 12px 0; }}
-        .footer {{ font-size: 11px; color: #94a3b8; border-top: 1px solid #334155; margin-top: 20px; padding-top: 12px; line-height: 1.5; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b1329; color: #f8fafc; margin: 0; padding: 12px; }}
+        .alert-card {{ background-color: #1a0f18; border: 2px solid #ef4444; border-radius: 12px; padding: 22px; max-width: 680px; margin: auto; box-sizing: border-box; }}
       </style>
     </head>
-    <body>
-      <div class="alert-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(239, 68, 68, 0.4); padding-bottom: 12px;">
-          <div>
-            <h2 style="color: #ef4444; margin: 0; font-size: 22px;">POLICE DEPARTMENT NOTICE</h2>
-            <span style="color: #94a3b8; font-size: 13px;">Automated Misinformation Interception System</span>
-          </div>
-          <span class="badge-danger">{badge_text}</span>
-        </div>
+    <body style="background-color: #0b1329; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center">
+            <div class="alert-card" style="background-color: #1a0f18; border: 2px solid #ef4444; border-radius: 12px; padding: 22px; max-width: 680px; text-align: left; box-shadow: 0 0 25px rgba(239, 68, 68, 0.25);">
 
-        <p style="color: #e2e8f0; font-size: 14px; line-height: 1.6;">
-          <strong>ATTENTION LAW ENFORCEMENT & CYBER CELL:</strong><br>
-          {intro_text}
-        </p>
+              <!-- Header with Compact Pill Badge (Never Stretches Vertically!) -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px; border-bottom: 1px solid rgba(239, 68, 68, 0.4); padding-bottom: 12px;">
+                <tr>
+                  <td valign="middle" align="left">
+                    <div style="color: #ef4444; font-size: 20px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2;">POLICE DEPARTMENT NOTICE</div>
+                    <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">Automated Misinformation Interception System</div>
+                  </td>
+                  <td valign="top" align="right" style="padding-left: 10px; width: 40%;">
+                    <div style="background-color: #ef4444; color: #ffffff; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 11px; text-align: center; line-height: 1.3; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);">
+                      {badge_text}
+                    </div>
+                  </td>
+                </tr>
+              </table>
 
-        <div class="person-box">
-          <h3 style="color: #f87171; margin-top: 0; margin-bottom: 8px;">📍 Suspect Identification & Geolocation:</h3>
-          <div><strong>Identified Location:</strong> <span style="font-size: 16px; color: #38bdf8; font-weight: bold;">📍 {person_location}</span></div>
-          <div><strong>Username / Handle:</strong> {person_username}</div>
-          <div><strong>Registered Contact Email:</strong> {person_email}</div>
-          <div><strong>Cumulative Strike Count:</strong> <span style="color: #ef4444; font-weight: bold;">{fake_count} Strikes</span></div>
-        </div>
+              <!-- Notice Body -->
+              <p style="color: #e2e8f0; font-size: 13px; line-height: 1.6; margin: 0 0 16px 0;">
+                <strong style="color: #fca5a5;">ATTENTION LAW ENFORCEMENT &amp; CYBER CELL:</strong><br>
+                {intro_text}
+              </p>
 
-        <div class="station-box">
-          <h3 style="color: #38bdf8; margin-top: 0; margin-bottom: 8px;">🚔 Nearest Jurisdiction Police Station Detected:</h3>
-          <div><strong>Assigned Police Station:</strong> <span style="font-size: 15px; font-weight: bold; color: #f8fafc;">{station_name}</span></div>
-          <div><strong>Jurisdiction Area / Address:</strong> {station_addr}</div>
-          <div><strong>Supervising Authority:</strong> {sho}</div>
-          <div><strong>Police Contact:</strong> {station_phone} | <strong>National Cybercrime:</strong> 1930</div>
-          <div><strong>Dispatch Destination:</strong> {target_email}</div>
-        </div>
+              <!-- Suspect Identification & Geolocation -->
+              <div style="background-color: rgba(239, 68, 68, 0.08); border-left: 4px solid #ef4444; padding: 14px 18px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; line-height: 1.8;">
+                <div style="color: #f87171; font-weight: 800; font-size: 14px; margin-bottom: 6px;">📍 Suspect Identification &amp; Geolocation:</div>
+                <div><strong>Identified Location:</strong> <span style="font-size: 15px; color: #38bdf8; font-weight: bold;">📍 {person_location}</span></div>
+                <div><strong>Username / Handle:</strong> <span style="color: #f1f5f9;">{person_username}</span></div>
+                <div><strong>Registered Contact Email:</strong> <span style="color: #f1f5f9;">{person_email}</span></div>
+                <div><strong>Cumulative Strike Count:</strong> <span style="color: #ef4444; font-weight: bold;">{fake_count} Strikes</span></div>
+              </div>
 
-        <div>
-          <h4 style="color: #fbbf24; margin-bottom: 6px;">Latest Fake Message Detected (Strike #{fake_count}):</h4>
-          <div class="story-quote">
-            "{current_fake_story}"
-          </div>
-        </div>
+              <!-- Assigned Police Station -->
+              <div style="background-color: #070b16; border: 1px solid #38bdf8; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; font-size: 13px; line-height: 1.8;">
+                <div style="color: #38bdf8; font-weight: 800; font-size: 14px; margin-bottom: 6px;">🚔 Nearest Jurisdiction Police Station Detected:</div>
+                <div><strong>Assigned Police Station:</strong> <span style="font-size: 14px; font-weight: bold; color: #f8fafc;">{station_name}</span></div>
+                <div><strong>Jurisdiction Area / Address:</strong> <span style="color: #cbd5e1;">{station_addr}</span></div>
+                <div><strong>Supervising Authority:</strong> <span style="color: #cbd5e1;">{sho}</span></div>
+                <div><strong>Police Contact:</strong> <span style="color: #cbd5e1;">{station_phone} | <strong>National Cybercrime:</strong> 1930</span></div>
+                <div><strong>Dispatch Destination:</strong> <span style="color: #fca5a5; font-weight: bold;">{target_email}</span></div>
+              </div>
 
-        {history_html}
+              <!-- Flagged Story -->
+              <div style="margin-bottom: 16px;">
+                <div style="color: #fbbf24; font-weight: 700; font-size: 12px; margin-bottom: 6px; text-transform: uppercase;">Latest Fake Message Detected (Strike #{fake_count}):</div>
+                <div style="background-color: #070b16; border-left: 4px solid #f59e0b; padding: 12px 16px; font-style: italic; color: #fef08a; border-radius: 4px; font-size: 13px; line-height: 1.6;">
+                  "{current_fake_story}"
+                </div>
+              </div>
 
-        <div class="footer">
-          <strong>STATUTORY COMPLIANCE NOTICE:</strong><br>
-          This automated evidentiary report was compiled by TruthGuard AI in accordance with IT Act 2000 & Section 505 IPC monitoring provisions.
-          Factual similarity tracking and user geolocation are provided to assist designated law enforcement authorities in verifying coordinated misinformation campaigns.
-        </div>
-      </div>
+              {history_html}
+
+              <!-- Statutory Notice Footer -->
+              <div style="font-size: 11px; color: #94a3b8; border-top: 1px solid #334155; margin-top: 20px; padding-top: 12px; line-height: 1.6;">
+                <strong>STATUTORY COMPLIANCE NOTICE:</strong><br>
+                This automated evidentiary report was compiled by TruthGuard AI in accordance with IT Act 2000 &amp; Section 505 IPC monitoring provisions.
+                Factual similarity tracking and user geolocation are provided to assist designated law enforcement authorities in verifying coordinated misinformation campaigns.
+              </div>
+
+            </div>
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
     """
