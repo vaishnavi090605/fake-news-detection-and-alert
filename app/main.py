@@ -279,7 +279,38 @@ def email_relay(payload: dict):
         return {"success": send_fake_news_alert(**args)}
     elif action == "police_escalation":
         return {"success": send_police_escalation_alert(**args)}
-    return {"error": "unknown action"}
+@app.get("/api/test-email")
+def test_email_diagnostics():
+    import smtplib
+    from app.email_service import SMTP_USER, SMTP_PASSWORD, SMTP_SERVER, SMTP_PORT, ALERT_EMAIL
+    
+    diag = {
+        "smtp_user_set": bool(SMTP_USER),
+        "smtp_password_set": bool(SMTP_PASSWORD),
+        "smtp_user": SMTP_USER,
+        "alert_email": ALERT_EMAIL,
+        "smtp_server": SMTP_SERVER,
+        "smtp_port": SMTP_PORT,
+    }
+    
+    # Test TLS 587
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=5) as s:
+            s.starttls()
+            s.login(SMTP_USER, SMTP_PASSWORD)
+            diag["tls_587"] = "CONNECTED_AND_AUTHENTICATED"
+    except Exception as e:
+        diag["tls_587"] = f"FAILED: {type(e).__name__}: {str(e)}"
+
+    # Test SSL 465
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=5) as s:
+            s.login(SMTP_USER, SMTP_PASSWORD)
+            diag["ssl_465"] = "CONNECTED_AND_AUTHENTICATED"
+    except Exception as e:
+        diag["ssl_465"] = f"FAILED: {type(e).__name__}: {str(e)}"
+
+    return diag
 
 
 @app.get("/history", response_model=list[schemas.HistoryItem])
