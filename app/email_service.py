@@ -74,7 +74,13 @@ def _send_email_http_api(subject: str, html_content: str, target_email: str) -> 
                 print(f"[RESEND SUCCESS] Email delivered successfully to {target_email} via Resend HTTPS API!", flush=True)
                 return True
         except Exception as e_res:
-            print(f"[RESEND ERROR] Resend dispatch failed: {e_res}", flush=True)
+            err_detail = str(e_res)
+            if hasattr(e_res, "read"):
+                try:
+                    err_detail += " -> " + e_res.read().decode("utf-8")
+                except Exception:
+                    pass
+            print(f"[RESEND ERROR] Resend dispatch failed: {err_detail}", flush=True)
 
     # 2. Custom Webhook (e.g. Google Apps Script Webhook)
     webhook_url = os.environ.get("EMAIL_WEBHOOK_URL") or env.get("EMAIL_WEBHOOK_URL")

@@ -300,14 +300,33 @@ def test_email_diagnostics():
     
     if resend_key:
         try:
-            success = _send_email_http_api(
-                "TruthGuard Test Email (Resend HTTPS)",
-                "<h3>TruthGuard Resend HTTPS API test successful!</h3>",
-                ALERT_EMAIL
+            import urllib.request
+            import json
+            payload = {
+                "from": "TruthGuard AI <onboarding@resend.dev>",
+                "to": [ALERT_EMAIL],
+                "subject": "TruthGuard AI — Live Cloud Alert Verification",
+                "html": "<h3>TruthGuard AI cloud verification alert delivered successfully!</h3><p>Please check your Spam/Junk folder if this does not appear in Primary inbox.</p>"
+            }
+            req = urllib.request.Request(
+                "https://api.resend.com/emails",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Authorization": f"Bearer {resend_key.strip()}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "TruthGuard-AI/1.0"
+                }
             )
-            diag["resend_test"] = "SUCCESS" if success else "FAILED"
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                diag["resend_test"] = json.loads(resp.read().decode("utf-8"))
         except Exception as e:
-            diag["resend_test"] = f"FAILED: {e}"
+            err_msg = str(e)
+            if hasattr(e, "read"):
+                try:
+                    err_msg += " -> " + e.read().decode("utf-8")
+                except Exception:
+                    pass
+            diag["resend_test"] = f"FAILED: {err_msg}"
 
     # Test TLS 587
     try:
