@@ -281,18 +281,34 @@ def email_relay(payload: dict):
         return {"success": send_police_escalation_alert(**args)}
 @app.get("/api/test-email")
 def test_email_diagnostics():
+    import os
     import smtplib
-    from app.email_service import SMTP_USER, SMTP_PASSWORD, SMTP_SERVER, SMTP_PORT, ALERT_EMAIL
+    from app.email_service import SMTP_USER, SMTP_PASSWORD, SMTP_SERVER, SMTP_PORT, ALERT_EMAIL, _send_email_http_api
     
+    resend_key = os.environ.get("RESEND_API_KEY")
+    webhook_url = os.environ.get("EMAIL_WEBHOOK_URL")
+
     diag = {
         "smtp_user_set": bool(SMTP_USER),
         "smtp_password_set": bool(SMTP_PASSWORD),
         "smtp_user": SMTP_USER,
         "alert_email": ALERT_EMAIL,
-        "smtp_server": SMTP_SERVER,
-        "smtp_port": SMTP_PORT,
+        "resend_key_configured": bool(resend_key),
+        "webhook_url_configured": bool(webhook_url),
+        "cloud_network_note": "Render free tier blocks ports 587 and 465 (Network is unreachable). To receive emails on Render, add RESEND_API_KEY in Render Environment Variables."
     }
     
+    if resend_key:
+        try:
+            success = _send_email_http_api(
+                "TruthGuard Test Email (Resend HTTPS)",
+                "<h3>TruthGuard Resend HTTPS API test successful!</h3>",
+                ALERT_EMAIL
+            )
+            diag["resend_test"] = "SUCCESS" if success else "FAILED"
+        except Exception as e:
+            diag["resend_test"] = f"FAILED: {e}"
+
     # Test TLS 587
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=5) as s:

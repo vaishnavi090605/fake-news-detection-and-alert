@@ -47,6 +47,54 @@ def _dispatch_smtp_message(msg: MIMEMultipart, target_email: str) -> bool:
     return False
 
 
+def _send_email_http_api(subject: str, html_content: str, target_email: str) -> bool:
+    import urllib.request
+    import json
+
+    # 1. Resend API (HTTPS port 443 - works on Render, Railway, AWS, etc.)
+    resend_key = os.environ.get("RESEND_API_KEY") or env.get("RESEND_API_KEY")
+    if resend_key:
+        try:
+            payload = {
+                "from": "TruthGuard AI <onboarding@resend.dev>",
+                "to": [target_email],
+                "subject": subject,
+                "html": html_content,
+            }
+            req = urllib.request.Request(
+                "https://api.resend.com/emails",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Authorization": f"Bearer {resend_key.strip()}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "TruthGuard-AI/1.0",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                print(f"[RESEND SUCCESS] Email delivered successfully to {target_email} via Resend HTTPS API!", flush=True)
+                return True
+        except Exception as e_res:
+            print(f"[RESEND ERROR] Resend dispatch failed: {e_res}", flush=True)
+
+    # 2. Custom Webhook (e.g. Google Apps Script Webhook)
+    webhook_url = os.environ.get("EMAIL_WEBHOOK_URL") or env.get("EMAIL_WEBHOOK_URL")
+    if webhook_url:
+        try:
+            payload = {"to": target_email, "subject": subject, "html": html_content}
+            req = urllib.request.Request(
+                webhook_url.strip(),
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                print(f"[WEBHOOK SUCCESS] Email delivered to {target_email} via Webhook!", flush=True)
+                return True
+        except Exception as e_wh:
+            print(f"[WEBHOOK ERROR] Webhook dispatch failed: {e_wh}", flush=True)
+
+    return False
+
+
 def send_fake_news_alert(
     fake_news_id: int,
     category: str,
@@ -172,7 +220,12 @@ def send_fake_news_alert(
     </html>
     """
 
-    # 1. Dispatch via Gmail SMTP (TLS 587 or SSL 465)
+    # 1. First attempt: Resend API or Webhook (HTTP port 443 - works on Render free tier where SMTP is blocked)
+    if _send_email_http_api(subject, html_content, target_email):
+        print(f"[EMAIL ALERT] Alert email sent successfully to {target_email} via HTTPS API!", flush=True)
+        return True
+
+    # 2. Second attempt: Gmail SMTP (TLS 587 or SSL 465 fallback - works locally or on cloud with open SMTP)
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = f"TruthGuard AI Alerts <{SMTP_USER}>"
@@ -181,7 +234,7 @@ def send_fake_news_alert(
     msg.attach(MIMEText(html_content, "html"))
 
     if _dispatch_smtp_message(msg, target_email):
-        print(f"[EMAIL ALERT] Alert email sent successfully to {target_email}!", flush=True)
+        print(f"[EMAIL ALERT] Alert email sent successfully to {target_email} via SMTP!", flush=True)
         return True
 
     return False
@@ -316,7 +369,12 @@ def send_police_escalation_alert(
         f"Evidentiary record dispatched in compliance with IT Act 2000 & Section 505 IPC monitoring provisions.\n"
     )
 
-    # Dispatch via Gmail SMTP (TLS 587 or SSL 465 fallback)
+    # 1. First attempt: Resend API or Webhook (HTTP port 443 - works on Render free tier where SMTP is blocked)
+    if _send_email_http_api(subject, html_content, target_email):
+        print(f"[POLICE DISPATCH] High-priority Police Escalation email sent to {target_email} via HTTPS API!", flush=True)
+        return True
+
+    # 2. Second attempt: Gmail SMTP (TLS 587 or SSL 465 fallback)
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = f"TruthGuard Cyber Emergency Alerts <{SMTP_USER}>"
@@ -325,7 +383,7 @@ def send_police_escalation_alert(
     msg.attach(MIMEText(html_content, "html"))
 
     if _dispatch_smtp_message(msg, target_email):
-        print(f"[POLICE DISPATCH] High-priority Police Escalation email sent to {target_email}!", flush=True)
+        print(f"[POLICE DISPATCH] High-priority Police Escalation email sent to {target_email} via SMTP!", flush=True)
         return True
 
     return False
