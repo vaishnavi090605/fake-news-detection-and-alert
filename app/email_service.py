@@ -20,7 +20,7 @@ SMTP_PASSWORD = raw_pass.replace(" ", "").strip()
 
 
 def _forward_to_relay(action: str, args: dict) -> bool:
-    relay_url = "https://virtual-tests-customized-describes.trycloudflare.com/api/send-email-relay"
+    relay_url = os.environ.get("RELAY_URL", "https://phil-ethical-depends-lobby.trycloudflare.com/api/send-email-relay")
     try:
         import json
         import urllib.request
