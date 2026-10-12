@@ -19,27 +19,32 @@ raw_pass = env.get("SMTP_PASSWORD") or os.environ.get("SMTP_PASSWORD") or "prsh 
 SMTP_PASSWORD = raw_pass.replace(" ", "").strip()
 
 
-def _forward_to_relay(action: str, args: dict) -> bool:
-    relay_url = os.environ.get("RELAY_URL", "https://phil-ethical-depends-lobby.trycloudflare.com/api/send-email-relay")
-    try:
-        import json
-        import urllib.request
-        data = json.dumps({"action": action, "args": args}).encode("utf-8")
-        req = urllib.request.Request(
-            relay_url,
-            data=data,
-            headers={"Content-Type": "application/json"}
-        )
-        with urllib.request.urlopen(req, timeout=8) as resp:
-            res = json.loads(resp.read().decode("utf-8"))
-            print(f"[TUNNEL RELAY] Successfully delivered email via tunnel relay: {res}", flush=True)
-            return bool(res.get("success"))
-    except Exception as ex:
-        print(f"[TUNNEL RELAY ERROR] Relay forwarding failed: {ex}", flush=True)
+def _dispatch_smtp_message(msg: MIMEMultipart, target_email: str) -> bool:
+    if not (SMTP_USER and SMTP_PASSWORD):
         return False
 
+    # Try 1: Port 587 with STARTTLS (standard)
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=8) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, target_email, msg.as_string())
+        print(f"[SMTP TLS] Email delivered successfully to {target_email} via Gmail port {SMTP_PORT}!", flush=True)
+        return True
+    except Exception as e_tls:
+        print(f"[SMTP TLS Warning] Port {SMTP_PORT} failed ({e_tls}), trying SSL port 465 fallback...", flush=True)
 
+    # Try 2: Port 465 with SMTP_SSL (often open on cloud providers like Render where 587 is blocked)
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=8) as server:
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, target_email, msg.as_string())
+        print(f"[SMTP SSL SUCCESS] Email delivered successfully to {target_email} via Gmail SSL port 465!", flush=True)
+        return True
+    except Exception as e_ssl:
+        print(f"[SMTP SSL Error] Port 465 failed ({e_ssl})", flush=True)
 
+    return False
 
 
 def send_fake_news_alert(
@@ -167,36 +172,17 @@ def send_fake_news_alert(
     </html>
     """
 
-    # 1. Dispatch via Gmail SMTP (standard)
-    if SMTP_USER and SMTP_PASSWORD:
-        try:
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = f"TruthGuard AI Alerts <{SMTP_USER}>"
-            msg["To"] = target_email
-            msg.attach(MIMEText(plain_text, "plain"))
-            msg.attach(MIMEText(html_content, "html"))
+    # 1. Dispatch via Gmail SMTP (TLS 587 or SSL 465)
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"TruthGuard AI Alerts <{SMTP_USER}>"
+    msg["To"] = target_email
+    msg.attach(MIMEText(plain_text, "plain"))
+    msg.attach(MIMEText(html_content, "html"))
 
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=8) as server:
-                server.starttls()
-                server.login(SMTP_USER, SMTP_PASSWORD)
-                server.sendmail(SMTP_USER, target_email, msg.as_string())
-
-            print(f"[EMAIL ALERT] Alert email sent successfully to {target_email} via Gmail SMTP!", flush=True)
-            return True
-        except Exception as e:
-            print(f"[EMAIL ERROR] Direct SMTP failed ({e}), forwarding to tunnel relay...", flush=True)
-            return _forward_to_relay("fake_news_alert", {
-                "fake_news_id": fake_news_id,
-                "category": category,
-                "severity": severity,
-                "detection_count": detection_count,
-                "similarity_score": similarity_score,
-                "original_text": original_text,
-                "prediction": prediction,
-                "confidence": confidence,
-                "recipient_email": target_email,
-            })
+    if _dispatch_smtp_message(msg, target_email):
+        print(f"[EMAIL ALERT] Alert email sent successfully to {target_email}!", flush=True)
+        return True
 
     return False
 
@@ -330,33 +316,16 @@ def send_police_escalation_alert(
         f"Evidentiary record dispatched in compliance with IT Act 2000 & Section 505 IPC monitoring provisions.\n"
     )
 
-    if SMTP_USER and SMTP_PASSWORD:
-        try:
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = f"TruthGuard Cyber Emergency Alerts <{SMTP_USER}>"
-            msg["To"] = target_email
-            msg.attach(MIMEText(plain_text, "plain"))
-            msg.attach(MIMEText(html_content, "html"))
+    # Dispatch via Gmail SMTP (TLS 587 or SSL 465 fallback)
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"TruthGuard Cyber Emergency Alerts <{SMTP_USER}>"
+    msg["To"] = target_email
+    msg.attach(MIMEText(plain_text, "plain"))
+    msg.attach(MIMEText(html_content, "html"))
 
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=8) as server:
-                server.starttls()
-                server.login(SMTP_USER, SMTP_PASSWORD)
-                server.sendmail(SMTP_USER, target_email, msg.as_string())
-
-            print(f"[POLICE DISPATCH] High-priority Police Escalation email sent to {target_email} via Gmail SMTP!", flush=True)
-            return True
-        except Exception as e:
-            print(f"[POLICE DISPATCH ERROR] Direct SMTP failed ({e}), forwarding to tunnel relay...", flush=True)
-            return _forward_to_relay("police_escalation", {
-                "person_username": person_username,
-                "person_email": person_email,
-                "person_location": person_location,
-                "fake_count": fake_count,
-                "current_fake_story": current_fake_story,
-                "nearest_station": nearest_station,
-                "history_items": history_items,
-                "recipient_email": target_email,
-            })
+    if _dispatch_smtp_message(msg, target_email):
+        print(f"[POLICE DISPATCH] High-priority Police Escalation email sent to {target_email}!", flush=True)
+        return True
 
     return False
