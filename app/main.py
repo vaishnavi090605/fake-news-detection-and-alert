@@ -1,6 +1,11 @@
 import csv
 import io
+import json
+import os
+import re
 import sqlite3
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Response, Header
@@ -25,8 +30,152 @@ from database.db_setup import get_connection, init_db
 from database.repeated_news_detector import record_check
 
 
+# ---------------------------------------------------------------------------
+# GNews Live Fact-Check Helper
+# ---------------------------------------------------------------------------
+_STOPWORDS = {
+    "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "do", "does", "did", "will", "would", "could",
+    "should", "may", "might", "shall", "can", "need", "dare", "ought",
+    "and", "or", "but", "not", "no", "nor", "so", "yet", "for", "in",
+    "on", "at", "to", "of", "by", "as", "with", "from", "into", "that",
+    "this", "these", "those", "it", "its", "also", "more", "very", "just",
+    "now", "all", "any", "both", "each", "few", "most", "other", "some",
+    "such", "than", "then", "their", "they", "about", "after", "before",
+    "between", "during", "through", "under", "while", "who", "which",
+    "what", "when", "where", "how", "says", "said", "according", "sources",
+}
 
-app = FastAPI(title="AI-Based Fake News Detection API", version="1.0")
+
+def _extract_query(text: str, max_words: int = 6) -> str:
+    """Extract meaningful keywords from text for a GNews search query."""
+    tokens = re.findall(r"[A-Za-z']{3,}", text)
+    seen = set()
+    keywords = []
+    for t in tokens:
+        w = t.lower()
+        if w not in _STOPWORDS and w not in seen:
+            seen.add(w)
+            keywords.append(t)
+        if len(keywords) >= max_words:
+            break
+    return " ".join(keywords)
+
+
+def _gnews_fact_check(text: str, api_key: str) -> dict:
+    """
+    Search GNews for articles matching the claim in `text`.
+    Returns a dict with:
+        verdict   : 'Genuine' | 'Fake' | 'Inconclusive' | None
+        confidence: float (0–1)
+        matched   : int   (number of confirming articles)
+        reasons   : list[str]
+        sources   : list[str]  (source names of matching articles)
+    """
+    query = _extract_query(text)
+    if not query or len(query) < 4:
+        return {"verdict": None, "confidence": 0.5, "matched": 0,
+                "reasons": [], "sources": []}
+
+    try:
+        encoded = urllib.parse.quote(query)
+        url = (
+            f"https://gnews.io/api/v4/search"
+            f"?q={encoded}&lang=en&max=7&apikey={api_key}"
+        )
+        req = urllib.request.Request(url, headers={"User-Agent": "TruthGuard-AI/1.0"})
+        with urllib.request.urlopen(req, timeout=7) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            articles = data.get("articles", [])
+    except Exception as exc:
+        # GNews call failed — return None so ML takes over
+        return {"verdict": None, "confidence": 0.5, "matched": 0,
+                "reasons": [f"Live news check unavailable: {exc}"], "sources": []}
+
+    if not articles:
+        return {
+            "verdict": "Inconclusive",
+            "confidence": 0.52,
+            "matched": 0,
+            "reasons": [
+                "No articles found in live news database for this claim.",
+                "Cannot independently verify or contradict this story.",
+                "Please check official sources before sharing.",
+            ],
+            "sources": [],
+        }
+
+    # --- score each article by keyword overlap with the submitted claim ------
+    text_words = set(
+        w.lower().strip(".,!?\"'()") for w in text.split() if len(w) > 3
+        and w.lower() not in _STOPWORDS
+    )
+    strong: list[dict] = []
+    weak:   list[dict] = []
+
+    for article in articles:
+        title   = (article.get("title")       or "").lower()
+        desc    = (article.get("description") or "").lower()
+        content = (article.get("content")     or "").lower()
+        blob    = f"{title} {desc} {content}"
+        blob_words = set(blob.split())
+        overlap = text_words & blob_words
+        if len(overlap) >= 3:
+            strong.append(article)
+        elif len(overlap) >= 1:
+            weak.append(article)
+
+    source_names = list({
+        a.get("source", {}).get("name", "")
+        for a in (strong or weak)
+        if a.get("source", {}).get("name")
+    })
+
+    if strong:
+        # At least one article clearly matches the claim → GENUINE
+        count = len(strong)
+        conf  = min(0.95, 0.72 + count * 0.06)
+        return {
+            "verdict": "Genuine",
+            "confidence": conf,
+            "matched": count,
+            "reasons": [
+                f"✅ Verified: {count} live news article(s) found confirming this story.",
+                f"Reported by: {', '.join(source_names[:3]) or 'major news outlets'}.",
+                "Story matches real-world reporting — classified as Genuine.",
+            ],
+            "sources": source_names,
+        }
+
+    if weak:
+        # Related articles found but don't directly confirm the specific claim
+        return {
+            "verdict": "Inconclusive",
+            "confidence": 0.54,
+            "matched": 0,
+            "reasons": [
+                "Related news articles found but they do not directly confirm this specific claim.",
+                f"Nearby sources: {', '.join(source_names[:3]) or 'news outlets'}.",
+                "Verify through official announcements before sharing.",
+            ],
+            "sources": source_names,
+        }
+
+    # No overlap at all
+    return {
+        "verdict": "Inconclusive",
+        "confidence": 0.50,
+        "matched": 0,
+        "reasons": [
+            "No live news articles match this specific claim.",
+            "Could not confirm or deny through current news sources.",
+            "Treat with caution — check authoritative sources.",
+        ],
+        "sources": [],
+    }
+
+
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -136,8 +285,42 @@ def predict(
     background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ):
+    # --- Step 1: ML baseline classification ----------------------------------
     result = ml_service.classify(payload.text)
     ml_reasons = result.get("reasons") or []
+
+    # --- Step 2: GNews live fact-check (overrides ML when key is available) --
+    gnews_key = os.environ.get("GNEWS_API_KEY") or ""
+    if gnews_key:
+        fc = _gnews_fact_check(payload.text, gnews_key)
+        fc_verdict = fc.get("verdict")       # 'Genuine' | 'Inconclusive' | None
+        fc_reasons = fc.get("reasons") or []
+        fc_sources = fc.get("sources") or []
+
+        if fc_verdict == "Genuine":
+            # Live news CONFIRMED this story → override ML → Genuine
+            result["prediction"] = "Genuine"
+            result["confidence"] = fc.get("confidence", 0.82)
+            ml_reasons = fc_reasons + (
+                [f"(ML cross-check: {ml_reasons[0]}"] if ml_reasons else []
+            )
+
+        elif fc_verdict == "Inconclusive":
+            # Live news found NOTHING confirming the claim
+            # Keep Fake if ML is highly confident (scam/fraud patterns), else Inconclusive
+            if result["prediction"] == "Fake" and result["confidence"] >= 0.85:
+                # Strong scam signals in text — keep Fake, add live news context
+                ml_reasons = ml_reasons + [
+                    "❌ No real news coverage found for this claim in live news database.",
+                    "Fake patterns confirmed by both ML model and absence of real news.",
+                ]
+            else:
+                # ML was uncertain + no live news → Inconclusive
+                result["prediction"] = "Inconclusive"
+                result["confidence"] = fc.get("confidence", 0.52)
+                ml_reasons = fc_reasons + (ml_reasons[:1] if ml_reasons else [])
+
+        # fc_verdict == None → GNews call failed → keep ML result as-is
 
     conn = get_connection()
 
@@ -157,6 +340,7 @@ def predict(
         confidence=result["confidence"],
         category=result["category"],
     )
+
 
     history_id = conn.execute(
         "SELECT id FROM news_history WHERE user_id = ? ORDER BY id DESC LIMIT 1",
