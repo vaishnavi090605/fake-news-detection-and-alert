@@ -1241,7 +1241,7 @@
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
-          resultsEl.innerHTML = `<span style="color:var(--danger-color); font-size:0.83rem;">⚠️ ${escapeHtml(err.detail || 'Search unavailable — please add GNEWS_API_KEY in Render environment variables.')}</span>`;
+          resultsEl.innerHTML = `<span style="color:var(--danger-color); font-size:0.83rem;">&#9888; ${escapeHtml(err.detail || 'Search unavailable.')}</span>`;
           return;
         }
         const data = await resp.json();
@@ -1249,16 +1249,61 @@
           resultsEl.innerHTML = '<em style="color:var(--text-muted); font-size:0.83rem;">No articles found. Try different keywords.</em>';
           return;
         }
-        resultsEl.innerHTML = data.articles.map(a => `
-          <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.07);">
-            <div style="font-weight:600; font-size:0.88rem; color:#f1f5f9; margin-bottom:2px;">${escapeHtml(a.title || '')}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml((a.source && a.source.name) || '')} · ${escapeHtml((a.publishedAt || '').substring(0,10))}</div>
-            <div style="margin-top:5px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-              <button onclick="useArticleForAnalysis(${JSON.stringify((a.title||'') + '. ' + (a.description||''))})" style="font-size:0.75rem; background:rgba(56,189,248,0.15); border:1px solid var(--accent-blue); color:var(--accent-blue); border-radius:4px; padding:3px 10px; cursor:pointer; font-weight:600;">📋 Analyze This</button>
-              <a href="${escapeHtml(a.url||'')}" target="_blank" style="font-size:0.75rem; color:var(--text-muted); text-decoration:underline;">View Source ↗</a>
+
+        // Render cards with "Analyzing..." badge — badges update live as predictions come in
+        resultsEl.innerHTML = data.articles.map((a, idx) => `
+          <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:600; font-size:0.88rem; color:#f1f5f9; margin-bottom:2px;">${escapeHtml(a.title || '')}</div>
+                <div style="font-size:0.74rem; color:var(--text-muted); margin-bottom:3px;">${escapeHtml((a.source && a.source.name) || '')} &middot; ${escapeHtml((a.publishedAt || '').substring(0,10))}</div>
+                <div style="font-size:0.78rem; color:#94a3b8; margin-bottom:5px; line-height:1.5;">${escapeHtml((a.description || '').substring(0,130))}${(a.description||'').length > 130 ? '&hellip;' : ''}</div>
+              </div>
+              <span id="nBadge_${idx}" style="font-size:0.68rem; font-weight:700; padding:4px 10px; border-radius:5px; white-space:nowrap; flex-shrink:0; background:rgba(148,163,184,0.12); color:#94a3b8; border:1px solid rgba(148,163,184,0.25);">&#8987; Analyzing&hellip;</span>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <button onclick="useArticleForAnalysis(${JSON.stringify((a.title||'') + '. ' + (a.description||''))})" style="font-size:0.74rem; background:rgba(56,189,248,0.15); border:1px solid var(--accent-blue); color:var(--accent-blue); border-radius:4px; padding:3px 10px; cursor:pointer; font-weight:600;">&#128203; Full Analysis</button>
+              <a href="${escapeHtml(a.url||'')}" target="_blank" style="font-size:0.74rem; color:var(--text-muted); text-decoration:underline;">View Source &#8599;</a>
             </div>
           </div>
         `).join('');
+
+        // Auto-analyze each article in parallel — update each badge as result arrives
+        const token2 = API.getToken ? API.getToken() : localStorage.getItem('fnd_token');
+        data.articles.forEach(async (a, idx) => {
+          const txt = [a.title, a.description, (a.content||'').substring(0,400)].filter(Boolean).join('. ').trim();
+          const badge = document.getElementById('nBadge_' + idx);
+          if (!txt || txt.length < 8) { if(badge) badge.textContent = '? No text'; return; }
+          try {
+            const pr = await fetch('/predict', {
+              method: 'POST',
+              headers: Object.assign({'Content-Type':'application/json'}, token2 ? {'Authorization':'Bearer '+token2} : {}),
+              body: JSON.stringify({ text: txt, category: 'General News' })
+            });
+            if (!pr.ok) throw new Error('err');
+            const res = await pr.json();
+            const pred = res.prediction || 'Unknown';
+            const conf = (parseFloat(res.confidence||0)*100).toFixed(0);
+            if (!badge) return;
+            if (pred === 'Genuine') {
+              badge.style.background = 'rgba(16,185,129,0.18)';
+              badge.style.color = '#10b981';
+              badge.style.border = '1px solid rgba(16,185,129,0.6)';
+              badge.textContent = '\u2705 GENUINE (' + conf + '%)';
+            } else if (pred === 'Fake') {
+              badge.style.background = 'rgba(239,68,68,0.18)';
+              badge.style.color = '#ef4444';
+              badge.style.border = '1px solid rgba(239,68,68,0.6)';
+              badge.textContent = '\uD83D\uDD34 FAKE (' + conf + '%)';
+            } else {
+              badge.style.background = 'rgba(245,158,11,0.18)';
+              badge.style.color = '#f59e0b';
+              badge.style.border = '1px solid rgba(245,158,11,0.6)';
+              badge.textContent = '\u26A0\uFE0F INCONCLUSIVE (' + conf + '%)';
+            }
+          } catch(e) { if(badge) badge.textContent = '? Unknown'; }
+        });
+
       } catch (err) {
         resultsEl.innerHTML = `<span style="color:var(--danger-color); font-size:0.83rem;">Search failed: ${escapeHtml(err.message)}</span>`;
       }
