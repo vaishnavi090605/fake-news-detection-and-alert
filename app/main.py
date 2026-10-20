@@ -177,6 +177,8 @@ def _gnews_fact_check(text: str, api_key: str) -> dict:
 
 
 
+app = FastAPI(title="AI-Based Fake News Detection API", version="1.0")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
