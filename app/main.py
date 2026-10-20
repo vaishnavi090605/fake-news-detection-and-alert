@@ -68,7 +68,7 @@ def _gnews_fact_check(text: str, api_key: str) -> dict:
     """
     Search GNews for articles matching the claim in `text`.
     Returns a dict with:
-        verdict   : 'Genuine' | 'Fake' | 'Inconclusive' | None
+        verdict   : 'Genuine' | None  (None means let ML decide — binary result)
         confidence: float (0–1)
         matched   : int   (number of confirming articles)
         reasons   : list[str]
@@ -96,13 +96,12 @@ def _gnews_fact_check(text: str, api_key: str) -> dict:
 
     if not articles:
         return {
-            "verdict": "Inconclusive",
-            "confidence": 0.52,
+            "verdict": None,
+            "confidence": 0.5,
             "matched": 0,
             "reasons": [
                 "No articles found in live news database for this claim.",
-                "Cannot independently verify or contradict this story.",
-                "Please check official sources before sharing.",
+                "ML binary classification result will be used (Fake or Genuine).",
             ],
             "sources": [],
         }
@@ -151,27 +150,27 @@ def _gnews_fact_check(text: str, api_key: str) -> dict:
 
     if weak:
         # Related articles found but don't directly confirm the specific claim
+        # Let the ML binary result (Fake/Genuine) stand
         return {
-            "verdict": "Inconclusive",
-            "confidence": 0.54,
+            "verdict": None,
+            "confidence": 0.5,
             "matched": 0,
             "reasons": [
                 "Related news articles found but they do not directly confirm this specific claim.",
                 f"Nearby sources: {', '.join(source_names[:3]) or 'news outlets'}.",
-                "Verify through official announcements before sharing.",
+                "ML binary classification result will be used (Fake or Genuine).",
             ],
             "sources": source_names,
         }
 
-    # No overlap at all
+    # No keyword overlap at all → let ML binary result (Fake/Genuine) stand
     return {
-        "verdict": "Inconclusive",
-        "confidence": 0.50,
+        "verdict": None,
+        "confidence": 0.5,
         "matched": 0,
         "reasons": [
             "No live news articles match this specific claim.",
-            "Could not confirm or deny through current news sources.",
-            "Treat with caution — check authoritative sources.",
+            "ML binary classification result will be used (Fake or Genuine).",
         ],
         "sources": [],
     }
@@ -297,7 +296,7 @@ def predict(
     gnews_key = os.environ.get("GNEWS_API_KEY") or ""
     if gnews_key:
         fc = _gnews_fact_check(payload.text, gnews_key)
-        fc_verdict = fc.get("verdict")       # 'Genuine' | 'Inconclusive' | None
+        fc_verdict = fc.get("verdict")       # 'Genuine' | None
         fc_reasons = fc.get("reasons") or []
         fc_sources = fc.get("sources") or []
 
@@ -309,22 +308,7 @@ def predict(
                 [f"(ML cross-check: {ml_reasons[0]}"] if ml_reasons else []
             )
 
-        elif fc_verdict == "Inconclusive":
-            # Live news found NOTHING confirming the claim
-            # Keep Fake if ML is highly confident (scam/fraud patterns), else Inconclusive
-            if result["prediction"] == "Fake" and result["confidence"] >= 0.85:
-                # Strong scam signals in text — keep Fake, add live news context
-                ml_reasons = ml_reasons + [
-                    "❌ No real news coverage found for this claim in live news database.",
-                    "Fake patterns confirmed by both ML model and absence of real news.",
-                ]
-            else:
-                # ML was uncertain + no live news → Inconclusive
-                result["prediction"] = "Inconclusive"
-                result["confidence"] = fc.get("confidence", 0.52)
-                ml_reasons = fc_reasons + (ml_reasons[:1] if ml_reasons else [])
-
-        # fc_verdict == None → GNews call failed → keep ML result as-is
+        # fc_verdict == None → GNews found nothing conclusive → keep ML binary result (Fake/Genuine)
 
     conn = get_connection()
 
@@ -393,10 +377,10 @@ def predict(
 
     conn.close()
 
-    # 5. Queue standard alert email in background — only for Fake or Inconclusive
+    # 5. Queue standard alert email in background — only for Fake
     # Genuine news does NOT trigger alert emails (no need to notify authorities)
     cat_val = getattr(payload, "category", None) or outcome.get("category") or "General News"
-    if outcome["prediction"] in ("Fake", "Inconclusive"):
+    if outcome["prediction"] == "Fake":
         background_tasks.add_task(
             send_fake_news_alert,
             fake_news_id=outcome["matched_fake_news_id"] or history_id,

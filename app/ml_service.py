@@ -12,8 +12,8 @@ Loads:
 NOTE ON MODEL METRICS:
     The trained model reports perfect metrics (1.0) which indicates data leakage
     during the train/test split. The model is used as a heuristic guide only.
-    Final predictions are calibrated using confidence thresholds and clearly
-    separated into Fake/Genuine/Inconclusive with human-readable reasons.
+    Final predictions are strictly binary: Fake or Genuine.
+    Logistic Regression is a binary classifier — argmax always produces a winner.
 """
 
 from pathlib import Path
@@ -61,7 +61,7 @@ class MLService:
         Returns:
             {
                 "clean_text": ...,
-                "prediction": "Fake" | "Genuine" | "Inconclusive",
+                "prediction": "Fake" | "Genuine",
                 "confidence": 0.0-1.0,   # confidence in the PREDICTED class
                 "category": "Politics" | "Health" | "Crime" | ...,
                 "reasons": list[str]     # human-readable explanation of why
@@ -133,17 +133,11 @@ class MLService:
         p_fake = float(proba[self.fake_index])
         p_genuine = float(proba[1 - self.fake_index])
 
-        # Inconclusive window: model cannot confidently decide
-        # Range 0.45–0.58 on fake score means near 50/50 split
-        if 0.45 <= p_fake <= 0.58:
-            prediction = "Inconclusive"
-            reasons.append(
-                f"Model confidence is low (Fake probability: {p_fake*100:.1f}%, Genuine: {p_genuine*100:.1f}%). "
-                "The content does not have strongly distinctive fake or genuine linguistic patterns. "
-                "Treat with caution — verify with independent sources before sharing."
-            )
-        elif pred_index == self.fake_index:
+        # Binary classification: always Fake or Genuine based on model's argmax
+        # Logistic Regression is a binary classifier — there is always a winner.
+        if pred_index == self.fake_index:
             prediction = "Fake"
+            confidence = p_fake
             reasons.append(
                 f"TF-IDF + Logistic Regression model assigned {p_fake*100:.1f}% probability of being fake news. "
                 "The linguistic patterns in this text closely match known misinformation in the training corpus."
@@ -154,6 +148,7 @@ class MLService:
             )
         else:
             prediction = "Genuine"
+            confidence = p_genuine
             reasons.append(
                 f"TF-IDF + Logistic Regression model assigned {p_genuine*100:.1f}% probability of being genuine. "
                 "The linguistic patterns appear consistent with factual reporting."
