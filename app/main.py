@@ -981,25 +981,37 @@ def update_report_status(
 
 @app.get("/api/news/search")
 async def news_search(q: str, max_results: int = 5):
-    """Search real news articles via GNews API (requires GNEWS_API_KEY env var)."""
-    import json
-    import os
-    import urllib.parse
-    import urllib.request
-
+    """Search real news articles via GNews API (requires GNEWS_API_KEY env var).
+    If a long article text is passed instead of keywords, keywords are auto-extracted.
+    """
     api_key = os.environ.get("GNEWS_API_KEY") or ""
     if not api_key:
         raise HTTPException(
             status_code=503,
             detail="News search is not configured. Ask the admin to set GNEWS_API_KEY in environment variables.",
         )
-    query = urllib.parse.quote(q.strip())
-    url = f"https://gnews.io/api/v4/search?q={query}&lang=en&max={max(1, min(max_results, 10))}&apikey={api_key}"
+
+    # Auto-extract short keyword query if user passed a long article text
+    raw = q.strip()
+    if len(raw.split()) > 7:
+        search_query = _extract_query(raw, max_words=6)
+    else:
+        search_query = raw
+
+    if not search_query:
+        raise HTTPException(status_code=400, detail="Could not extract keywords from input.")
+
+    encoded = urllib.parse.quote(search_query)
+    url = f"https://gnews.io/api/v4/search?q={encoded}&lang=en&max={max(1, min(max_results, 10))}&apikey={api_key}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "TruthGuard-AI/1.0"})
         with urllib.request.urlopen(req, timeout=8) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            return {"articles": data.get("articles", []), "total": data.get("totalArticles", 0)}
+            return {
+                "articles": data.get("articles", []),
+                "total": data.get("totalArticles", 0),
+                "search_query_used": search_query,   # tells frontend what keywords were searched
+            }
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"News search failed: {str(e)}")
 

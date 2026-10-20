@@ -167,9 +167,10 @@
       <section id="check-section" class="tg-analyzer-card">
         <!-- Live News Search Panel -->
         <div style="margin-bottom:14px; background: rgba(56,189,248,0.06); border:1px solid rgba(56,189,248,0.2); border-radius:10px; padding:14px 16px;">
-          <div style="font-size:0.78rem; color:var(--accent-blue); font-weight:700; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">🔍 Search Live News</div>
+          <div style="font-size:0.78rem; color:var(--accent-blue); font-weight:700; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">🔍 Search Live News</div>
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:8px;">Type keywords <em>or</em> paste a full sentence — keywords will be auto-extracted</div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <input id="newsSearchQuery" type="text" class="tg-textarea" style="flex:1; min-height:38px; height:38px; padding:6px 12px; margin:0;" placeholder="Search e.g. Chandrayaan, RBI rate, ISRO, election...">
+            <input id="newsSearchQuery" type="text" class="tg-textarea" style="flex:1; min-height:38px; height:38px; padding:6px 12px; margin:0;" placeholder="e.g. Samantha pregnant, Chandrayaan Moon, RBI rate hike...">
             <button type="button" onclick="searchLiveNews()" style="background:var(--accent-blue); color:#070b16; border:none; border-radius:6px; padding:8px 16px; font-weight:700; cursor:pointer; white-space:nowrap; height:38px; flex-shrink:0;">Search</button>
           </div>
           <div id="newsSearchResults" style="margin-top:10px; display:none;"></div>
@@ -179,6 +180,7 @@
             <button type="button" onclick="fetchArticleUrl()" style="background:none; border:1px solid var(--accent-blue); color:var(--accent-blue); border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.78rem; font-weight:600; white-space:nowrap;">Fetch Text</button>
           </div>
         </div>
+
 
         <div class="tg-input-wrapper">
           <div class="tg-input-icon">
@@ -1245,13 +1247,20 @@
           return;
         }
         const data = await resp.json();
-        if (!data.articles || !data.articles.length) {
-          resultsEl.innerHTML = '<em style="color:var(--text-muted); font-size:0.83rem;">No articles found. Try different keywords.</em>';
-          return;
+
+        // Show which keywords were actually searched (in case auto-extraction happened)
+        let headerHtml = '';
+        if (data.search_query_used && data.search_query_used.toLowerCase() !== q.toLowerCase().substring(0, data.search_query_used.length)) {
+          headerHtml = `<div style="font-size:0.73rem; color:var(--text-muted); margin-bottom:8px; padding:4px 8px; background:rgba(56,189,248,0.08); border-radius:4px; border-left:2px solid var(--accent-blue);">
+            Keywords used: <strong style="color:var(--accent-blue)">${escapeHtml(data.search_query_used)}</strong>
+          </div>`;
         }
 
-        // Render cards with "Analyzing..." badge — badges update live as predictions come in
-        resultsEl.innerHTML = data.articles.map((a, idx) => `
+        if (!data.articles || !data.articles.length) {
+          resultsEl.innerHTML = headerHtml + '<em style="color:var(--text-muted); font-size:0.83rem;">No articles found. Try different keywords.</em>';
+          return;
+        }
+        resultsEl.innerHTML = headerHtml + data.articles.map((a, idx) => `
           <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.07);">
             <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px; flex-wrap:wrap;">
               <div style="flex:1; min-width:0;">
