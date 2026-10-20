@@ -48,8 +48,10 @@ _STOPWORDS = {
 
 
 def _extract_query(text: str, max_words: int = 6) -> str:
-    """Extract meaningful keywords from text for a GNews search query."""
-    tokens = re.findall(r"[A-Za-z']{3,}", text)
+    """Extract clean meaningful keywords from text for a GNews search query.
+    Only plain letters are kept — no apostrophes, numbers or punctuation.
+    """
+    tokens = re.findall(r"[A-Za-z]{4,}", text)   # only pure letters, min length 4
     seen = set()
     keywords = []
     for t in tokens:
@@ -981,8 +983,9 @@ def update_report_status(
 
 @app.get("/api/news/search")
 async def news_search(q: str, max_results: int = 5):
-    """Search real news articles via GNews API (requires GNEWS_API_KEY env var).
-    If a long article text is passed instead of keywords, keywords are auto-extracted.
+    """Search real news articles via GNews API.
+    Always extracts clean keywords — works whether user types short keywords
+    or pastes a full article paragraph.
     """
     api_key = os.environ.get("GNEWS_API_KEY") or ""
     if not api_key:
@@ -991,17 +994,20 @@ async def news_search(q: str, max_results: int = 5):
             detail="News search is not configured. Ask the admin to set GNEWS_API_KEY in environment variables.",
         )
 
-    # Auto-extract short keyword query if user passed a long article text
+    # Always extract clean keywords — removes punctuation, apostrophes, stopwords
     raw = q.strip()
-    if len(raw.split()) > 7:
-        search_query = _extract_query(raw, max_words=6)
-    else:
-        search_query = raw
+    search_query = _extract_query(raw, max_words=5)  # max 5 keywords for GNews
+
+    # Fallback: if extraction got nothing (e.g. all stopwords), use first 3 raw words cleaned
+    if not search_query:
+        fallback_words = [re.sub(r"[^A-Za-z]", "", w) for w in raw.split()[:3] if len(w) > 2]
+        search_query = " ".join(fallback_words)
 
     if not search_query:
-        raise HTTPException(status_code=400, detail="Could not extract keywords from input.")
+        raise HTTPException(status_code=400, detail="Could not extract keywords. Try shorter keywords like 'Chandrayaan Moon' or 'Samantha pregnant'.")
 
-    encoded = urllib.parse.quote(search_query)
+    # Use quote_plus for safe URL encoding (spaces become +, safe for all chars)
+    encoded = urllib.parse.quote_plus(search_query)
     url = f"https://gnews.io/api/v4/search?q={encoded}&lang=en&max={max(1, min(max_results, 10))}&apikey={api_key}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "TruthGuard-AI/1.0"})
@@ -1010,7 +1016,7 @@ async def news_search(q: str, max_results: int = 5):
             return {
                 "articles": data.get("articles", []),
                 "total": data.get("totalArticles", 0),
-                "search_query_used": search_query,   # tells frontend what keywords were searched
+                "search_query_used": search_query,
             }
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"News search failed: {str(e)}")
