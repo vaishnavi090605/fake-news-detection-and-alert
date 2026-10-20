@@ -205,20 +205,22 @@ def predict(
 
     conn.close()
 
-    # 5. Queue standard alert email in background (non-blocking)
+    # 5. Queue standard alert email in background — only for Fake or Inconclusive
+    # Genuine news does NOT trigger alert emails (no need to notify authorities)
     cat_val = getattr(payload, "category", None) or outcome.get("category") or "General News"
-    background_tasks.add_task(
-        send_fake_news_alert,
-        fake_news_id=outcome["matched_fake_news_id"] or history_id,
-        category=cat_val,
-        severity="high" if (police_escalation or outcome["prediction"] == "Fake") else "low",
-        detection_count=outcome["detection_count"],
-        similarity_score=outcome["similarity_score"],
-        original_text=payload.text,
-        prediction=outcome["prediction"],
-        confidence=outcome["confidence"],
-        recipient_email="bachuvaishnavi098@gmail.com",
-    )
+    if outcome["prediction"] in ("Fake", "Inconclusive"):
+        background_tasks.add_task(
+            send_fake_news_alert,
+            fake_news_id=outcome["matched_fake_news_id"] or history_id,
+            category=cat_val,
+            severity="high" if (police_escalation or outcome["prediction"] == "Fake") else "medium",
+            detection_count=outcome["detection_count"],
+            similarity_score=outcome["similarity_score"],
+            original_text=payload.text,
+            prediction=outcome["prediction"],
+            confidence=outcome["confidence"],
+            recipient_email="bachuvaishnavi098@gmail.com",
+        )
 
     return schemas.NewsResult(
         id=history_id,
