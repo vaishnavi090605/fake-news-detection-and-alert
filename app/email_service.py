@@ -15,7 +15,7 @@ ALERT_EMAIL = env.get("ALERT_EMAIL") or os.environ.get("ALERT_EMAIL") or "bachuv
 SMTP_SERVER = env.get("SMTP_SERVER") or os.environ.get("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(env.get("SMTP_PORT") or os.environ.get("SMTP_PORT", 587))
 SMTP_USER = env.get("SMTP_USER") or os.environ.get("SMTP_USER") or "bachuvaishnavi098@gmail.com"
-raw_pass = env.get("SMTP_PASSWORD") or os.environ.get("SMTP_PASSWORD") or "prsh lljm fmjy rawg"
+raw_pass = env.get("SMTP_PASSWORD") or os.environ.get("SMTP_PASSWORD") or ""
 SMTP_PASSWORD = raw_pass.replace(" ", "").strip()
 
 

@@ -7,5 +7,3 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
-      - key: FAKE_NEWS_ADMIN_CODE
-        value: letmein-admin

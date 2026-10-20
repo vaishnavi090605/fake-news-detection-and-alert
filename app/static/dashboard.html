@@ -165,6 +165,21 @@
 
       <!-- News Analyzer Input Glass Card -->
       <section id="check-section" class="tg-analyzer-card">
+        <!-- Live News Search Panel -->
+        <div style="margin-bottom:14px; background: rgba(56,189,248,0.06); border:1px solid rgba(56,189,248,0.2); border-radius:10px; padding:14px 16px;">
+          <div style="font-size:0.78rem; color:var(--accent-blue); font-weight:700; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">🔍 Search Live News</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="newsSearchQuery" type="text" class="tg-textarea" style="flex:1; min-height:38px; height:38px; padding:6px 12px; margin:0;" placeholder="Search e.g. Chandrayaan, RBI rate, ISRO, election...">
+            <button type="button" onclick="searchLiveNews()" style="background:var(--accent-blue); color:#070b16; border:none; border-radius:6px; padding:8px 16px; font-weight:700; cursor:pointer; white-space:nowrap; height:38px; flex-shrink:0;">Search</button>
+          </div>
+          <div id="newsSearchResults" style="margin-top:10px; display:none;"></div>
+          <div style="margin-top:10px; font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span>Or paste article URL:</span>
+            <input id="articleUrl" type="url" style="flex:1; min-width:200px; padding:4px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#e2e8f0; font-size:0.8rem;" placeholder="https://...">
+            <button type="button" onclick="fetchArticleUrl()" style="background:none; border:1px solid var(--accent-blue); color:var(--accent-blue); border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.78rem; font-weight:600; white-space:nowrap;">Fetch Text</button>
+          </div>
+        </div>
+
         <div class="tg-input-wrapper">
           <div class="tg-input-icon">
             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -260,6 +275,9 @@
           <div id="repeatedBanner" class="tg-alert-banner" style="display: none;">
             ⚠️ <strong>Repeated Misinformation Alert:</strong> Alert email dispatched to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station Authority)
           </div>
+
+          <!-- AI Analysis Explanation / Reasons -->
+          <div id="resReasons" style="display:none; margin-top:12px; background: rgba(56,189,248,0.07); border: 1px solid rgba(56,189,248,0.25); border-radius:8px; padding:14px 18px; font-size:0.87rem; color:#cbd5e1; line-height:1.7;"></div>
 
           <!-- Emergency Police Escalation & Jurisdiction Banner -->
           <div id="policeEscalationBanner" class="tg-alert-banner" style="display: none; background: rgba(239, 68, 68, 0.15); border: 2px solid var(--danger-color); color: #fecaca; margin-top: 14px; flex-direction: column; align-items: flex-start; gap: 10px; padding: 18px; border-radius: var(--radius-md);">
@@ -825,10 +843,10 @@
       try {
         const stats = await API.stats();
         if (stats) {
-          document.getElementById('statChecked').textContent = (stats.total_checked || 1248).toLocaleString();
-          document.getElementById('statFake').textContent = (stats.fake_count || 386).toLocaleString();
-          document.getElementById('statRepeated').textContent = (stats.repeated_count || 142).toLocaleString();
-          document.getElementById('statAlerts').textContent = (stats.alerts_count || 89).toLocaleString();
+          document.getElementById('statChecked').textContent = (stats.total_checked ?? 0).toLocaleString();
+          document.getElementById('statFake').textContent = (stats.fake_count ?? 0).toLocaleString();
+          document.getElementById('statRepeated').textContent = (stats.repeated_count ?? 0).toLocaleString();
+          document.getElementById('statAlerts').textContent = (stats.alerts_count ?? 0).toLocaleString();
           document.getElementById('alertCounterBadge').textContent = stats.alerts_count || 0;
         }
       } catch (err) {
@@ -899,9 +917,29 @@
 
       const banner = document.getElementById('repeatedBanner');
       if (banner) {
-        banner.style.display = 'flex';
-        banner.innerHTML = `📩 <strong>Alert Email Dispatched:</strong> Story analysis sent to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station / Monitoring Cell)`;
+        if (isFake) {
+          banner.style.display = 'flex';
+          if (data.is_repeated) {
+            banner.innerHTML = `⚠️ <strong>Repeated Misinformation Alert:</strong> This fake story has been detected <strong>${data.detection_count || 1}x</strong> — alert email dispatched to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station / Monitoring Cell)`;
+          } else {
+            banner.innerHTML = `📩 <strong>Alert Email Dispatched:</strong> Story analysis sent to <strong>bachuvaishnavi098@gmail.com</strong> (Nearby Police Station / Monitoring Cell)`;
+          }
+        } else {
+          banner.style.display = 'none';
+        }
       }
+
+      // Show AI analysis reasons/explanation
+      const reasonsEl = document.getElementById('resReasons');
+      if (reasonsEl) {
+        if (data.reasons && data.reasons.length > 0) {
+          reasonsEl.style.display = 'block';
+          reasonsEl.innerHTML = `<strong>📋 AI Analysis Explanation:</strong><ul style="margin:8px 0 0 0; padding-left:18px; line-height:1.7;">${data.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`;
+        } else {
+          reasonsEl.style.display = 'none';
+        }
+      }
+
 
       // Police Escalation & Jurisdiction Mapping Alert
       const pBanner = document.getElementById('policeEscalationBanner');
@@ -1188,6 +1226,82 @@
 
       await loadStats();
     });
+
+
+    async function searchLiveNews() {
+      const q = document.getElementById('newsSearchQuery').value.trim();
+      if (!q) { alert('Please enter a search term.'); return; }
+      const resultsEl = document.getElementById('newsSearchResults');
+      resultsEl.style.display = 'block';
+      resultsEl.innerHTML = '<em style="color:var(--text-muted)">Searching live news...</em>';
+      try {
+        const token = API.getToken ? API.getToken() : localStorage.getItem('fnd_token');
+        const resp = await fetch(`/api/news/search?q=${encodeURIComponent(q)}&max_results=5`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          resultsEl.innerHTML = `<span style="color:var(--danger-color); font-size:0.83rem;">⚠️ ${escapeHtml(err.detail || 'Search unavailable — please add GNEWS_API_KEY in Render environment variables.')}</span>`;
+          return;
+        }
+        const data = await resp.json();
+        if (!data.articles || !data.articles.length) {
+          resultsEl.innerHTML = '<em style="color:var(--text-muted); font-size:0.83rem;">No articles found. Try different keywords.</em>';
+          return;
+        }
+        resultsEl.innerHTML = data.articles.map(a => `
+          <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div style="font-weight:600; font-size:0.88rem; color:#f1f5f9; margin-bottom:2px;">${escapeHtml(a.title || '')}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml((a.source && a.source.name) || '')} · ${escapeHtml((a.publishedAt || '').substring(0,10))}</div>
+            <div style="margin-top:5px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <button onclick="useArticleForAnalysis(${JSON.stringify((a.title||'') + '. ' + (a.description||''))})" style="font-size:0.75rem; background:rgba(56,189,248,0.15); border:1px solid var(--accent-blue); color:var(--accent-blue); border-radius:4px; padding:3px 10px; cursor:pointer; font-weight:600;">📋 Analyze This</button>
+              <a href="${escapeHtml(a.url||'')}" target="_blank" style="font-size:0.75rem; color:var(--text-muted); text-decoration:underline;">View Source ↗</a>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        resultsEl.innerHTML = `<span style="color:var(--danger-color); font-size:0.83rem;">Search failed: ${escapeHtml(err.message)}</span>`;
+      }
+    }
+
+    function useArticleForAnalysis(text) {
+      const ta = document.getElementById('newsText');
+      if (ta) { ta.value = text; ta.focus(); }
+      const resultsEl = document.getElementById('newsSearchResults');
+      if (resultsEl) resultsEl.style.display = 'none';
+    }
+
+    async function fetchArticleUrl() {
+      const url = document.getElementById('articleUrl').value.trim();
+      if (!url) { alert('Please enter a URL.'); return; }
+      const ta = document.getElementById('newsText');
+      if (ta) ta.value = 'Fetching article text...';
+      try {
+        const token = API.getToken ? API.getToken() : localStorage.getItem('fnd_token');
+        const resp = await fetch(`/api/fetch-article?url=${encodeURIComponent(url)}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          if (ta) ta.value = '';
+          alert(data.detail || 'Could not fetch article. The site may block scrapers or require login.');
+          return;
+        }
+        if (ta) ta.value = data.text || '';
+        const srcInput = document.getElementById('newsSourceUrl');
+        if (srcInput) srcInput.value = url;
+      } catch (err) {
+        if (ta) ta.value = '';
+        alert('Failed to fetch article: ' + err.message);
+      }
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'newsSearchQuery') {
+        searchLiveNews();
+      }
+    });
+
   </script>
 </body>
 </html>

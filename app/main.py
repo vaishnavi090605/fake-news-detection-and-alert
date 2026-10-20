@@ -137,6 +137,7 @@ def predict(
     user: dict = Depends(get_current_user),
 ):
     result = ml_service.classify(payload.text)
+    ml_reasons = result.get("reasons") or []
 
     conn = get_connection()
 
@@ -231,6 +232,7 @@ def predict(
         severity="high" if (police_escalation or outcome["prediction"] == "Fake") else "low",
         alert_raised=outcome["alert_raised"] or police_escalation,
         is_inconclusive=(outcome["prediction"] == "Inconclusive"),
+        reasons=ml_reasons,
         user_fake_count=user_fake_count,
         police_escalation=police_escalation,
         nearest_police_station=nearest_station,
@@ -787,3 +789,59 @@ def update_report_status(
         "id": report_id,
         "status": status_value,
     }
+
+
+@app.get("/api/news/search")
+async def news_search(q: str, max_results: int = 5):
+    """Search real news articles via GNews API (requires GNEWS_API_KEY env var)."""
+    import json
+    import os
+    import urllib.parse
+    import urllib.request
+
+    api_key = os.environ.get("GNEWS_API_KEY") or ""
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="News search is not configured. Ask the admin to set GNEWS_API_KEY in environment variables.",
+        )
+    query = urllib.parse.quote(q.strip())
+    url = f"https://gnews.io/api/v4/search?q={query}&lang=en&max={max(1, min(max_results, 10))}&apikey={api_key}"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "TruthGuard-AI/1.0"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return {"articles": data.get("articles", []), "total": data.get("totalArticles", 0)}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"News search failed: {str(e)}")
+
+
+@app.get("/api/fetch-article")
+async def fetch_article(url: str):
+    """Fetch and extract plain text from a news article URL (best-effort, paywalls not supported)."""
+    import html as html_module
+    import re
+    import urllib.request
+
+    if not url.strip().startswith(("http://", "https://")):
+        raise HTTPException(status_code=400, detail="Invalid URL — must start with http:// or https://")
+    try:
+        req = urllib.request.Request(
+            url.strip(),
+            headers={"User-Agent": "Mozilla/5.0 (compatible; TruthGuard-AI/1.0)"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            raw_html = resp.read().decode("utf-8", errors="ignore")
+        # Strip scripts, styles, and tags
+        text = re.sub(r"<script[^>]*>.*?</script>", "", raw_html, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r"<[^>]+>", " ", text)
+        text = html_module.unescape(text)
+        text = re.sub(r"\s+", " ", text).strip()
+        return {
+            "text": text[:3000],
+            "url": url,
+            "note": "First 3000 characters extracted. Paywalled or JavaScript-only pages may return limited or no useful text.",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Could not fetch article: {str(e)}")
